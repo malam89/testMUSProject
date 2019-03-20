@@ -1,0 +1,48 @@
+<!--- 
+    Description : This Page will be for side bar component for Searching EON Complaint  Customer Information 
+--->
+<!--
+    Created By : Aruna Manjari 
+    Created Date : 11-April-2016
+    Service Request : SR_EON_PC_028
+    Change History
+    CH01 # SR_EON_PC_054 # 11/05/2016 # Shivram Survase # Given page access so that Voice users can search EON complaints at community portal.
+-->
+<apex:page id="pageID" docType="html-5.0">
+
+    <script>
+        function redirect(){
+            var appointmentID = document.getElementById('pageID:EONAppointmentSearch:appointmentID').value;
+            var Complaintaddress = document.getElementById('pageID:EONAppointmentSearch:Complaintaddress').value;
+            
+            //CH01.Start
+            var fullURL=document.location.href.split('/');
+            var url;
+            if(fullURL[3].toUpperCase()=='VOICE')
+                url = '/VOICE/apex/EON_NonCustomer_Complaint_Search_Result?appointmentID=' +appointmentID;    //CH01.End      
+            else
+                url = '/apex/EON_NonCustomer_Complaint_Search_Result?appointmentID=' +appointmentID;
+                url += '&Complaintaddress='+ Complaintaddress;
+                
+                
+            window.top.location = url;               
+        }
+        
+        window.onload = setFocus
+            function setFocus() {}         
+    </script>        
+
+    <div style="height: 0px; clear: both;"></div>
+    <apex:form id="EONAppointmentSearch" style="display: block;">
+        <apex:outputText >Complainant Name: </apex:outputText><br/>
+        <apex:inputText id="appointmentID" style="width:160px"/><br/> 
+        
+        <apex:outputText >Complainant Address : </apex:outputText><br/>
+        <apex:inputText id="Complaintaddress" style="width:160px"/><br/>  
+        
+         
+        
+        <br/>
+        <input value="---Search---" type="submit" onclick="redirect();"></input>                                  
+    </apex:form>
+</apex:page>

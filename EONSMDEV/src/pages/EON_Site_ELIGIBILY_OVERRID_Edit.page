@@ -1,0 +1,16 @@
+<!---
+    Description : This page is used to override the edit EON Eligibility Overrides record.
+--->
+<!--
+    Created By : Praveen G
+    Created Date : 31/10/2017
+    Service Request : SR_OptiMUS_EON_136
+-->
+
+<apex:page standardController="EON_Eligibility_Override__c">
+    <script>
+        alert('you do not have permission to edit this record');
+        var siteID = '{!EON_Eligibility_Override__c.Premise__c}';
+        window.open('/'+siteID, '_self');
+    </script>
+</apex:page>

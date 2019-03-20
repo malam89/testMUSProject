@@ -1,0 +1,139 @@
+<!---
+    DESCRIPTION: This page is accessed from a the View button of EON Complaint Object.
+                 1. A New Visual Force page to Override the standard Record Detail page.
+
+--->
+<!--
+    CREATED BY   : Mehboob Alam
+    CREATED DATE : 02/10/2017
+    Service Req : SR_OptiMUS_EON_104
+    Change History
+    CH01 # Heena # SR_OptiMUS_EON_235 # 04/12/2018 # Added/Enabled field History Tracking
+-->
+<apex:page id="nPage" standardController="EON_Complaint__c" extensions="EON_Complaint_View_Controller" >
+      <style>
+       body .individualPalette .secondaryPalette.bPageBlock, 
+       body.UserTagStatsPage .secondaryPalette.bPageBlock{
+        background-color: #fff; !important;
+       }
+      
+       body .bPageBlock .pbBody .pbSubheader .hideListButton {
+        background: transparent url(/img/alohaSkin/twisty_sprite.png) 0 -11px no-repeat !important;
+       }
+       body .bPageBlock .pbBody .pbSubheader .showListButton {
+        background: transparent url(/img/alohaSkin/twisty_sprite.png) 0 0 no-repeat !important;
+       }
+      
+       .pbSubheader {
+         background-color: transparent !important;
+         color: black !important;
+         border-width: 2px 0 0 !important;
+         border-style: solid !important;
+         border-color: #79b4cd !important;
+       }
+       .txtBox {
+        position: relative;
+        right: 35%;
+        font-family: Arial,Helvetica,sans-serif;
+       }
+       .btnCls{
+         color: #fff !important;
+         background: #1797c0 !important;
+       }
+     </style>
+   
+    <apex:form id="nForm">
+    <apex:sectionHeader title="EON Complaint" subtitle="{!EON_Complaint__c.Name}"/>
+        <apex:pageBlock id="pBlock" title="EON Complaint Detail">
+            <!-- New Page Block Section for Complaint Contact Information-->
+            <apex:pageBlockSection id="pbSectionCCI" title="Complainant Contact Information">
+                <apex:outputField id="cName" value="{!EON_Complaint__c.Complainant_Name__c}"/>
+                <apex:outputField id="sAddress" value="{!EON_Complaint__c.Site_Address__c}"/> 
+                <apex:outputField id="eCustomer" value="{!EON_Complaint__c.EON_Customer__c}"/> 
+                <apex:OutputField id="sCity" value="{!EON_Complaint__c.Site_City__c}"/>
+                <apex:pageBlockSectionItem rendered="{!(!EON_Complaint__c.EON_Customer__c)}"/> 
+                <apex:OutputField id="cCustomer" value="{!EON_Complaint__c.Customer_Name__c}" rendered="{!EON_Complaint__c.EON_Customer__c}"/>
+                <apex:OutputField id="sPostCode" value="{!EON_Complaint__c.Site_Postcode__c}"/>
+                <apex:pageBlockSectionItem rendered="{!(!EON_Complaint__c.EON_Customer__c)}"/> 
+                <apex:OutputField id="rCustomer" value="{!EON_Complaint__c.Relationship_to_Customer__c}" rendered="{!EON_Complaint__c.EON_Customer__c}"/>
+                <apex:OutputField id="cAddress" value="{!EON_Complaint__c.Correspondence_Address__c}"/>
+                <apex:OutputField id="pContactMethod" value="{!EON_Complaint__c.Preferred_Contact_Method__c}"/>
+                <apex:OutputField id="cCity" value="{!EON_Complaint__c.Correspondence_City__c}"/>
+                <apex:OutputField id="cEmail" value="{!EON_Complaint__c.Email__c}"/>
+                <apex:OutputField id="cPostCode" value="{!EON_Complaint__c.Correspondence_Postcode__c}"/>
+                <apex:OutputField id="cTelePhone" value="{!EON_Complaint__c.Telephone__c}" styleClass="reqVal"/>
+                <apex:OutputField id="cReceivedBy" value="{!EON_Complaint__c.Complaint_Received_By__c}"/>
+                <apex:pageBlockSectionItem > <!-- Blank Space--> </apex:pageBlockSectionItem>
+                <apex:OutputField id="cSAName" value="{!EON_Complaint__c.Customer_Service_Advisor_Name__c}"/>
+            </apex:pageBlockSection>
+            
+            <!-- New Section for Complaint Information-->
+            <apex:pageBlockSection id="pbSectionCI" title="Complaint Information">
+                <apex:OutputField id="cRComplaint" value="{!EON_Complaint__c.Repeat_Complaint__c}"/>
+                <apex:OutputField id="cStatus" value="{!EON_Complaint__c.Complaint_Status__c}"/>
+                <apex:pageBlockSectionItem rendered="{!(!EON_Complaint__c.Repeat_Complaint__c)}"/>
+                <apex:OutputField id="cPComplaint" value="{!EON_Complaint__c.Previous_Complaint_ID__c}" rendered="{!(EON_Complaint__c.Repeat_Complaint__c)}"/>
+                <apex:OutputField id="cStatusTime" value="{!EON_Complaint__c.Status_Update_Time__c}"/>
+                <apex:OutputField id="cAppointment" value="{!EON_Complaint__c.Appointment_ID__c}"/>
+                <apex:OutputField id="cAllocatedTo" value="{!EON_Complaint__c.Allocated_To__c}"/>
+                <apex:OutputField id="cMPAN" value="{!EON_Complaint__c.MPAN__c}"/>
+                <apex:panelGrid id="cPanel" columns="2" styleClass="txtBox">
+                    <apex:outputLabel id="cMPRNLabel" value="{!$ObjectType.EON_Complaint__c.fields.MPRN__c.label}" Styleclass="labelCol" />
+                    <apex:OutputField id="cMPRN" value="{!EON_Complaint__c.MPRN__c}"/>
+                </apex:panelGrid>
+                <apex:OutputField id="cTechnician" value="{!EON_Complaint__c.Technician__c}"/>
+                <apex:OutputField id="cDateAllocated" value="{!EON_Complaint__c.Date_Allocated__c}"/>
+                <apex:OutputField id="cJobType" value="{!EON_Complaint__c.Job_Type__c}"/>
+                <apex:OutputField id="cDateReceived" value="{!EON_Complaint__c.Date_Complaint_Received__c}"/>
+                <apex:OutputField id="cComplaintType" value="{!EON_Complaint__c.Complaint_Type__c}"/>
+                <apex:OutputField id="cComplaintLogged" value="{!EON_Complaint__c.Date_Complaint_Logged__c}"/>
+                <apex:OutputField id="cComplaintDesc" value="{!EON_Complaint__c.Complaint_Description__c}"/>
+                <apex:OutputField id="cInvNotes" value="{!EON_Complaint__c.Investigation_Notes__c}"/>
+                <apex:OutputField id="cCategoryLevel1" value="{!EON_Complaint__c.Complaint_Category_Level_1__c}"/>
+                <apex:pageBlockSectionItem rendered="{!(!EON_Complaint__c.EON_Customer__c)}"> <!-- Blank Space--> </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!EON_Complaint__c.EON_Customer__c}">
+                    <apex:outputLabel >Book an Appointment</apex:outputLabel>
+                    <apex:commandButton onclick="appBookingPage();" value="MUS Appointment Booking System" styleClass="btnCls"/>
+                </apex:pageBlockSectionItem>
+                <apex:OutputField id="cCategoryLevel2" value="{!EON_Complaint__c.Complaint_Category_Level_2__c}"/>
+            </apex:pageBlockSection>
+            
+            <!-- New Page Block Section for Complaint Outcome-->
+            <apex:pageBlockSection id="pbSectionCO" title="Complaint Outcome">
+                <apex:OutputField id="cOutcome" value="{!EON_Complaint__c.Complaint_Outcome__c}"/>
+                <apex:OutputField id="cAmount" value="{!EON_Complaint__c.Compensation_Amount__c}"/>
+                <apex:OutputField id="cDReason" value="{!EON_Complaint__c.Dispute_Reason__c}" />
+                <apex:OutputField id="cComplaintResolved" value="{!EON_Complaint__c.Date_Complaint_Resolved__c}"/>
+                <apex:OutputField id="cRDescription" value="{!EON_Complaint__c.Resolution_Description__c}" />
+                <apex:OutputField id="cDRComplaint" value="{!EON_Complaint__c.Days_to_Resolve_Complaint__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection id="pbSectionEComp" title="EON Complaints" columns="1">
+                <apex:pageBlockTable id="cTable" value="{!lComplaint}" var="t1">
+                    <apex:column id="lCompId" headerValue="Complaint ID">
+                        <apex:outputLink id="lCompName" value="/{!t1.id}" target="_blank">{!t1.Name}</apex:outputLink>
+                    </apex:column>  
+                    <apex:column id="lCName" headerValue="Complainant Name" value="{!t1.Complainant_Name__c}"></apex:column>
+                    <apex:column id="lCompType" headerValue="Complaint Type" value="{!t1.Complaint_Type__c}"></apex:column>
+                    <apex:column id="lCompLogged" headerValue="Date Complaint Logged" value="{!t1.Date_Complaint_Logged__c}"></apex:column>
+                    <apex:column id="lCompStatus" headerValue="Complaint Status" value="{!t1.Complaint_Status__c}"></apex:column>
+                </apex:pageBlockTable> 
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons id="pbBtnSec">
+                <apex:commandButton id="eBtn" value="Edit" action="{!Edit}"/>
+                <apex:commandButton id="dBtn" value="Delete" action="{!Delete}"/>
+            </apex:pageBlockButtons> 
+        </apex:pageBlock>
+    </apex:form>
+    <apex:relatedList id="cContactList" list="EON_Complaint_Contacts__r"/>
+    <apex:relatedList id="CAttList" list="CombinedAttachments"/>
+    <!--CH01.Start-->
+    <apex:relatedList id="cContactHistory" list="Histories"/>
+    <!--CH01.End-->
+    <script type="text/javascript">
+     function appBookingPage(){
+          var mpanVal = document.getElementById('nPage:nForm:pBlock:pbSectionCI:cMPAN').innerHTML;
+          var mprnVal = document.getElementById('nPage:nForm:pBlock:pbSectionCI:cMPRN').innerHTML;
+          window.open('/apex/EON_Appointment_Booking?mpan='+mpanVal+'&mprn='+mprnVal);
+     }
+    </script>
+</apex:page>

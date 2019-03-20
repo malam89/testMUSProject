@@ -1,0 +1,67 @@
+<!--- 
+    Description : This Page will be for side bar component for Searching EON Complaint  Customer Information 
+--->
+<!--
+    Created By : Aruna Manjari 
+    Created Date : 11-April-2016
+    Service Request : SR_EON_PC_028
+    Change History
+    CH01 # SR_EON_PC_054 # 11/05/2016 # Shivram Survase # Given page access so that Voice users can search EON complaints at community portal.
+    CH02 # SR_EON_PC_077 # 30/06/2016 # krishna Yalavarthi# change the label Names as per sr logic 
+-->
+<apex:page id="pageID" docType="html-5.0">
+
+    <script>
+        function redirect(){
+            var appointmentID = document.getElementById('pageID:EONAppointmentSearch:appointmentID').value;
+            var customerName = document.getElementById('pageID:EONAppointmentSearch:customerName').value;
+            var mpan = document.getElementById('pageID:EONAppointmentSearch:mpan').value;
+           // CH02 var mprn = document.getElementById('pageID:EONAppointmentSearch:mprn').value;
+            
+            var Technician = document.getElementById('pageID:EONAppointmentSearch:Technician').value;
+            var Appointment = document.getElementById('pageID:EONAppointmentSearch:Appointment').value;
+            var CustomerServiceAdvisorName = document.getElementById('pageID:EONAppointmentSearch:CustomerServiceAdvisorName').value;
+            
+            //CH01.Start
+            var fullURL=document.location.href.split('/');
+            var url;
+            if(fullURL[3].toUpperCase()=='VOICE')
+                url = '/VOICE/apex/EON_Complaint_Search_Result?appointmentID=' +appointmentID;    //CH01.End      
+            else
+                url = '/apex/EON_Complaint_Search_Result?appointmentID=' +appointmentID;
+                url += '&customerName='+ customerName;
+                url += '&mpan='+ mpan; 
+         // CH02   url += '&mprn='+ mprn;
+                url += '&Technician='+ Technician;
+                url += '&Appointment='+ Appointment; 
+                url += '&CustomerServiceAdvisorName='+ CustomerServiceAdvisorName;
+                
+            window.top.location = url;               
+        }
+        
+        window.onload = setFocus
+            function setFocus() {}         
+    </script>        
+
+    <div style="height: 0px; clear: both;"></div>
+    <apex:form id="EONAppointmentSearch" style="display: block;">
+        <apex:outputText >Complaint ID: </apex:outputText><br/>
+        <apex:inputText id="appointmentID" style="width:160px"/><br/> 
+        <apex:outputText >Customer ID: </apex:outputText><br/>
+        <apex:inputText id="customerName" style="width:160px"/><br/>  
+        <apex:outputText >Customer Name: </apex:outputText><br/>
+        <apex:inputText id="mpan" style="width:160px"/><br/> 
+        <!-- <apex:outputText >Premise: </apex:outputText><br/>      
+        <apex:inputText id="mprn" style="width:160px"/><br/> -->
+        
+        <apex:outputText >Technician Name: </apex:outputText><br/>
+        <apex:inputText id="Technician" style="width:160px"/><br/>  
+        <apex:outputText >Appointment ID: </apex:outputText><br/>
+        <apex:inputText id="Appointment" style="width:160px"/><br/> 
+        <apex:outputText >Customer Service Advisor Name: </apex:outputText><br/>
+        <apex:inputText id="CustomerServiceAdvisorName" style="width:160px"/><br/> 
+        
+        <br/>
+        <input value="---Search---" type="submit" onclick="redirect();"></input>                                  
+    </apex:form>
+    </apex:page>

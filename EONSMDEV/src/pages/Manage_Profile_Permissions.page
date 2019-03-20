@@ -1,0 +1,98 @@
+<!---
+  Description : This page is accessible to System Administrators alone. The page allows the user to select an Isis object and display the profile permissions
+                against the same. User can also select a profile to narrow down the results.
+--->
+<!--
+  Created By  : Tushar
+  Created On  : 15/05/2014
+  Service Req : SR_ISIS_Central_499
+  Change History
+  CH01 # SR_ISIS_Central_518 # 28/10/2014 # Puneet Mehta # Created a button to export permission.
+  CH01 # SR_ISIS_Central_522 # 07/01/2015 #shraddha      # added the column of No of active users.
+-->
+<apex:page id="myPage" controller="Manage_Profile_Permissions" >
+    <!-- Load jQuery/salesfoce Libraries and CSS -->
+    <apex:includeScript value="{!URLFOR($Resource.jQuery_Lib, 'js/jquery-1.8.2.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery_Lib, 'js/jquery-ui-1.9.1.custom.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQuery_chosen, 'chosen/chosen.jquery.min.js')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.jQuery_Lib,'css/custom-theme/jquery-ui-1.9.1.custom.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.jQuery_chosen, 'chosen/chosen.css')}"/>
+    <script>
+        var $ = jQuery.noConflict();
+        <!--- getConfigs() - Javascript method to validate the selection--->
+        function getConfigs(){
+            if(document.getElementById('myPage:form:pgBlock:pbSection:pbsectionItem1:selectedObject').value =='-' && document.getElementById('myPage:form:pgBlock:pbSection:pbsectionItem2:selectedProfile').value =='-')
+                alert('Please select an Object OR Profile from the below list and click Get Permissions button.');
+            else
+               getPermissions(document.getElementById('myPage:form:pgBlock:pbSection:pbsectionItem1:selectedObject').value,document.getElementById('myPage:form:pgBlock:pbSection:pbsectionItem2:selectedProfile').value);
+            return false;       
+        }
+        //CH01.START
+        function exportTable1(){
+            if(document.getElementById('myPage:form:pgBlock:pbSection:pbsectionItem1:selectedObject').value =='-' && document.getElementById('myPage:form:pgBlock:pbSection:pbsectionItem2:selectedProfile').value =='-')
+                alert('Please select an Object OR Profile from the below list and click Get Permissions button.');
+            else{
+               var x = document.getElementById('myPage:form:pgBlock:pbSection:permissionTable').rows.length;
+               if(x > 1){exportTable();alert('Please wait while your report is being exported...');}
+               else {alert('Please select an Object OR Profile from the below list and click Get Permissions button.');}
+            }
+            return false;       
+        }
+        //CH01.END
+        //to execute on page load
+        $(function(){
+            $('.chzn-select').chosen();
+        });
+    </script>
+    <style>
+        .txtAlign{  text-align:center;   }
+    </style>
+    <apex:form id="form" >
+    <!-- actionfunction to pass selected variables to the controller -->
+    <apex:actionFunction name="getPermissions" reRender="msg,permissionTable" status="status"> 
+        <apex:param name="selectedObj" value=""/>
+        <apex:param name="selectedProfile" value=""/>
+    </apex:actionFunction>
+    <apex:actionFunction name="exportTable" status="status1" action="{!exportTable}"></apex:actionFunction>
+    <apex:pageBlock id="pgBlock">
+        <!-- to display messages for the users -->
+        <apex:pageMessage id="msg" strength="1" severity="Info" summary="{!message}"></apex:pageMessage>
+        <apex:pageBlockSection columns="1" id="pbSection" >
+            <!-- Section for selecting object and profile -->
+            <apex:pageBlockSectionItem id="pbsectionItem1" >
+                <apex:outputLabel >Object</apex:outputLabel>
+                <apex:selectList style="width:400px;" styleClass="chzn-select" size="1" id="selectedObject"  >
+                    <apex:selectOptions value="{!ObjectList}"></apex:selectOptions>
+                </apex:SelectList>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem id="pbsectionItem2">
+                <apex:outputLabel >Profile</apex:outputLabel>
+                <apex:selectList styleClass="chzn-select" style="width:400px;" size="1" id="selectedProfile"  >
+                    <apex:selectOptions value="{!ProfileList}"></apex:selectOptions>
+                </apex:SelectList>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+                <apex:actionStatus id="status" startText="Please wait..."></apex:actionStatus>
+                <apex:commandButton onclick="return getConfigs();" value="Get Permissions"/>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+                <apex:actionStatus id="status1" startText="Exporting..."></apex:actionStatus>
+                <apex:commandButton onclick="return exportTable1();" value="Export as Excel"/><!---CH01 -->
+            </apex:pageBlockSectionItem>
+            <!-- to display the results -->
+            <apex:pageBlockTable columnClasses=",txtAlign,txtAlign,txtAlign,txtAlign,txtAlign,txtAlign,txtAlign" headerClass="txtAlign" columnsWidth="15%,15%,10%,10%,10%,10%,10%,10%,10%" id="permissionTable" value="{!Permissions}" var="permission">
+                <apex:column headerValue="Profile Name" value="{!permission.con.parent.ProfileId}"/>  <!---CH02 -->
+                <apex:column headerValue="Object Name" value="{!permission.con.SobjectType}"/>          <!---CH02 -->
+                <apex:column headerValue="Read" value="{!permission.con.PermissionsRead}"/>            <!---CH02 -->
+                <apex:column headerValue="Create" value="{!permission.con.PermissionsCreate}"/>       <!---CH02 -->
+                <apex:column headerValue="Edit" value="{!permission.con.PermissionsEdit}"/>           <!---CH02 -->
+                <apex:column headerValue="Delete" value="{!permission.con.PermissionsDelete}"/>        <!---CH02 -->
+                <apex:column headerValue="View All" value="{!permission.con.PermissionsViewAllRecords}"/>  <!---CH02 -->
+                <apex:column headerValue="Modify All" value="{!permission.con.PermissionsModifyAllRecords}"/> <!---CH02 -->
+                <!--CH02.start-->
+                <apex:column headerValue="No of Active Users" value="{!permission.ActiveUserCount}"/>
+                <!--CH02.end-->
+            </apex:pageBlockTable>
+        </apex:pageblockSection>
+    </apex:pageBlock></apex:form>
+</apex:page>

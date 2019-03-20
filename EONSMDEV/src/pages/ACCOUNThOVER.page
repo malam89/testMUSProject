@@ -1,0 +1,36 @@
+<apex:Page id="brokerPage" StandardController="Account"  >
+ 
+ 
+<div class="RLPanelShadow"><div class="RLPanel" id="RLPanel" onblur="sfdcPage.relatedListPanel.hideRLDelayed(null, 100)" onfocus="sfdcPage.relatedListPanel.showRL()" onmouseout="sfdcPage.relatedListPanel.hideRLDelayed(null, 100)" onmouseover="sfdcPage.relatedListPanel.showRL()"><iframe frameborder="0" id="RLPanelFrame" name="RLPanelFrame" src="/emptyHtmlDoc.html" title="Hidden Frame - Ignore"></iframe></div></div><div class="listHoverLinks"><span class="invisibleMinHeight">|</span></div>
+<script type="text/javascript">
+try { sfdcPage.registerRelatedListPanel('RLPanel',false);} catch(e) {}
+</script>
+ 
+<apex:detail subject="{!account.id}" relatedList="false" relatedListHover="true" title="true"/>
+ 
+<!--==========================================================-->
+<!-- RELATED LISTS -->
+<!--==========================================================-->
+<apex:relatedList id="contactList" list="Contacts" pageSize="5"/>
+<apex:relatedList id="activityList" list="OpenActivities" />
+<apex:relatedList id="historyList" list="ActivityHistories" />
+<!--==========================================================-->
+<!-- CUSTOM HOVER -->
+<!--==========================================================-->
+ 
+<apex:outputPanel rendered="true">
+<script type="text/javascript">
+try
+{
+sfdcPage.registerRelatedList('brokerPage:contactList', '', '', false, '', '',false,false,true, '');
+sfdcPage.registerRelatedList('brokerPage:activityList', '', '', false, '', '',false,false,true, '');
+sfdcPage.registerRelatedList('brokerPage:historyList', '', '', false, '', '',false,false,true, '');
+}
+catch (e)
+{
+}
+ 
+</script>
+</apex:outputPanel>
+ 
+</apex:page>

@@ -1,0 +1,21 @@
+<apex:page sidebar="true" showHeader="true" controller="EON_Deployment_Utility">
+    <apex:form >
+        <apex:pageBlock id="pgBlock" title="Process Appointments in Bulk" mode="Edit">
+            <apex:pageMessages id="pmMesg"/>
+        	<apex:pageBlockSection >
+            	<apex:pageBlockSectionItem >
+                	<apex:outputLabel ><b>MUS Appointment ID(s)</b> </apex:outputLabel>
+                    <apex:inputTextarea cols="70" rows="5" value="{!AllApptID}" label="Appointment ID"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection >
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel ><b>Please Note: </b><font color="red">Maximum 30 appointments are allowed per transaction. Multiple appointment should be entered with comma(,) separated</font></apex:outputLabel>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons id="pbbButtons">
+            	<apex:commandButton value="Process Appointment" action="{!ProcessAppointment}"/>
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

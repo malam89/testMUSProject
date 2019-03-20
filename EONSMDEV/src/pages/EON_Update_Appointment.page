@@ -1,0 +1,683 @@
+<!---
+    DESCRIPTION: This page will be open through 'Update Appointment' button on Appointment Portal to initiate update activity in OFSC and also ISIS.
+--->
+<!--
+    CREATED BY          : Akshay Bairagi
+    CREATED DATE        : 14/04/2016
+    Service Req         : SR_EON_AB_031
+    CHANGE HISTORY
+    CH01 # SR_EON_AB_044 # 09-05-2016 # Sivasankar K # Adding functionality to add the Eon Appointment Vulnerabilities and removing them.
+    CH02 # SR_EON_AB_061 # 16-05-2016 # Sivasankar K # Adding new fields to page and rendering them based on values.
+    CH03 # SR_EON_PC_051 # 17/05/2016 # Nitin B # Enabled Header.
+    CH04 # SR_EON_Mobile_042 #30/05/2016 #Shruti Moghe # Changed field type for the field Requested_SSC__c
+    CH05 # SR_EON_Mobile_046 #08/06/2016 #Shruti Moghe # Changed field type for the field Requested_SSC__c
+    CH06 # SR_EON_AB_071 # 16/06/2016 # Dharmendra P # Add/remove fields for PAYG
+    CH07 # SR_EON_AB_066 # 29/06/2016 # Akshay # added multiple changes
+    CH08 # SR_EON_AB_084 # 06/07/2016 # Dharmendra P # Added Planned Meter Mode field and render functionality for PAYG section if value is 'PAYG'
+    CH09 # SR_EON_AB_090 # 13/07/2016 # Puneet Mehta # Display alert once the appointment is successfully updated.
+    CH10 # SR_EON_AB_099 # 25-07-2016 # Sivasankar K # Adding Current SSC field in layout and changing Requested SSC field from text to lookup.
+    CH11 # SR_EON_AB_108 # 30/07/2016 # Shruti Moghe # updated the Key_Contact_Number__c field data type from number to Text 
+    CH12 # SR_EON_AB_104 # 02/08/2016 # Tashika Gupta # Added functionality related to changing of lookup to picklist and more.
+    CH13 # SR_EON_AB_115 # 04/08/2016 # Dharmendra P # Added Appointment Reason field. 
+    CH14 # Jira-2177 # 15/08/2016 # Mahadev # Key_Contact_Number__c was comment out as part of CH11 and never restored
+    CH15 # SR_EON_AB_137 # 10/09/2016 # Puneet Mehta # Added Assisted Work Reason to page.
+    CH16 # SR_EON_AB_140 # 08/09/2016 # Praveen G# Added condition to display Planned Meter Mode only for SMART.
+    CH17 # SR_EON_AB_146 # 14/09/2016 # Shruti Moghe # Added Required = true condition for Caller Name
+    CH18 # SR_EON_AB_148 # 14/09/2016 # Puneet Mehta # Changed condition for displaying Data Consent Section
+    CH19 # SR_EON_AB_131 # 15/08/2016 # Sivasankar K # Adding Planned E/G Meter Types for New Connections and change the logic for Requested SSC when appointment reason is New Connection.
+    CH20 # SR_EON_AB_152 # 19/09/2016 # Puneet Mehta # Changed condition for displaying E Meter Location and G Meter Location
+    CH21 # SR_EON_AB_147 # 19/09/2016 # SIVASANKAR # Amending the PAYG section for making the fields required on selecting the check boxes.
+    CH22 # SR_EON_AB_150 # 20/09/2016 # Mahadev J # Remove 'Gas bind Performed Flag' & if MPAN is true then 'Requested SSC' is required.
+    CH23 # SR_EON_AB_154 # 28/09/2016 # Puneet Mehta # Changed 'Key' to 'KEY'
+    CH24 # SR_EON_AB_181 # 31/10/2016 # Puneet Mehta # Changed the condition for displaying fields
+    CH25 # SR_EON_AB_190 # 30/11/2016 # Puneet Mehta # Changed the condition for displaying Planned_E_Meter_Type__c
+    CH26 # SR_EON_AB_191 # 30/11/2016 # Puneet Mehta # Made Planned Meter Mode mandatory
+    CH27 # SR_EON_AB_192 # 05/12/2016 # Puneet Mehta # MS1 should not be displayed in Planned_E_Meter_Type__c when jobcode is OOAMETERFUNCCHANGE
+    CH28 # SR_EON_AB_195 # 05/12/2016 # Puneet Mehta # Planned Meter Mode restricted to update
+    CH29 # SR_EON_AB_201 # 27/12/2016 #Aruna Manjari # commented out the Requested SSC logic 
+    CH30 # SR_EON_AB_207 # 17/03/2017 # Praveen G # Planned E Meter type should be visible for ECO and Faulty jobs
+    CH31 # SR_OptiMUS_EON_053 # 11-04-2017 # Aruna manjari # Prevent deletion of the final appointment contact record once at least 1 exists.
+    CH32 # SR_OptiMUS_EON_068 # 02/06/2017 # Praveen G # Make the 3 fields read only for the job code - OOAEINSTALLBIND
+    CH33 # SR_OptiMUS_EON_155 # 02/11/2017 # Praveen G # New changes for Requested SSC.
+-->
+<apex:page tabStyle="EON_Appointment__c" showHeader="true" sidebar="false" standardController="EON_Appointment__c" extensions="EON_Update_Appointment_extn" id="mypage">
+    <!-- CH03 -->
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-1.7.2.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-ui-1.8.21.custom.min.js')}" />
+    <apex:sectionHeader title="EON Appointment Edit" subtitle="{!EON_Appointment__c.Name}" id="SH"/>
+    <script language="javascript">
+    
+        //CH30.Start
+        function displayPlannedEMeterType(){
+            var sel = document.getElementById('mypage:myform:pb1:pbs1:j_id43:selReason');
+            var appReason = getSelectedOption(sel).text;
+            
+            if(appReason =='Emergency Call Out' || appReason =='Fault')
+                document.getElementById('mypage:myform:pb1:pbs1:eMeter').style.display = 'block';
+            else
+                document.getElementById('mypage:myform:pb1:pbs1:eMeter').style.display = 'none';      
+        }
+        
+        function getSelectedOption(sel) {
+            var opt;
+            for ( var i = 0, len = sel.options.length; i < len; i++ ) {
+                opt = sel.options[i];
+                if ( opt.selected === true ) {
+                    break;
+                }
+            }
+            return opt;
+        }        
+        //CH30.End
+    
+    
+        jQuery(function() {
+            jQuery('select.RemoveNone option[value=]').remove();
+        });
+        //CH09.START
+        function confirmSend_OFSC(){
+            if(jQuery(".messageText").text().match("^Error") || jQuery('img[title="Error"]').length > 0){
+                jQuery('div:contains("Appointment updated Successfully.")').closest('.message').remove();
+            }
+            else{
+                if (jQuery(".messageText").text().match("^Appointment updated Successfully.")) {
+                    alert('Appointment updated');
+                    window.open("/apex/EON_Appointment_Booking", "_self");
+                }
+            }
+        }
+        //CH09.END
+    </script>
+    <style>
+        input[type="button"]:disabled {
+        color: grey;
+        }
+        .SalesforceDetailFont {
+        color:#4a4a56;
+        white-space: normal;
+        text-align: right;
+        font-size: 91%;
+        font-weight: bold;
+        margin-right: 15px;
+        }
+        .imgclass:hover{
+        background-image: url(/img/help/helpOrbs.gif);
+        background-repeat: no-repeat;
+        width: 16px;
+        height: 15px;
+        background-position: right;
+        }
+        .imgclass{
+        background-image: url(/img/help/helpOrbs.gif);
+        background-repeat: no-repeat;
+        width: 16px;
+        height: 15px;
+        }
+        body input.btn {
+        color: #fff;
+        background: #1797c0;
+        border-color: #ffffff;
+        font-family: Arial,Helvetica,sans-serif;
+        letter-spacing: 0.25px;
+        }
+        .btn:hover, .btn:focus {
+        color: #fff;
+        background-color: #43bfe6;
+        } 
+    </style>
+    <apex:form id="myform">
+        <apex:pageMessages id="mymsg" ></apex:pageMEssages>
+        <!-- this is where the error messages will appear -->
+        <apex:pageBlock id="pb1" title="EON Appointment Edit" mode="Edit">
+            <apex:pageBlockButtons id="pbs">
+                <apex:commandButton id="saveButton" action="{!save}" value="Save" reRender="mymsg,pb1" 
+                    oncomplete="confirmSend_OFSC();"
+                    onclick="var jobCode = '{!IsReqestedEditable}';if(jobCode == 'true'){var currentSSC = '{!EON_Appointment__c.Current_SSC__c}';var RequestedSSC = document.getElementById('mypage:myform:pb1:pbs1:j_id31:ssc').value;if(currentSSC != RequestedSSC){var msg = 'You have chosen to change the customer meter SSC from '+currentSSC+' to '+RequestedSSC+' that could have implications on customer billing. Do you wish to proceed?';if(!confirm(msg)){return false;}}}"
+                    />
+                <apex:commandButton action="/apex/EON_Appointment_Booking" value="Cancel" immediate="true" />
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="2" id="pbs1" title="Information">
+                <apex:inputField id="Access" value="{!EON_Appointment__c.Access_Pass_Phrase__c}"/>
+                <apex:inputField id="Caller" value="{!EON_Appointment__c.Caller_Name__c}" required="true"/>
+                <!--CH17 added required attribute-->
+                <!--CH04.Start-->
+                <!--CH10.Start-->
+                <apex:outputField value="{!EON_Appointment__c.Current_SSC__c}"/>
+                <apex:outputText value="" />
+                <!--CH10.End-->
+                <!--CH10.Start-->
+               
+                 <!--CH29.old .start
+                    <apex:pageBlockSectionItem helpText="{!$ObjectType.EON_Appointment__c.Fields.Requested_SSC__c.inlineHelpText}" rendered="{!NOT(ISBLANK(EON_Appointment__c.MPAN__c))}">
+                    <apex:outputLabel id="Requested" value="Requested SSC"></apex:outputLabel>
+                    <!--CH19 Start-->
+                      <!--CH29.old <apex:outputPanel styleClass="requiredInput" layout="block" >
+                        <apex:outputPanel styleClass="{!IF(AND(NOT(ISBLANK(EON_Appointment__c.Job_Code__c)),NOT(ISBLANK(EON_Appointment__c.Job_Code__r.Job_Type__c)),CONTAINS(EON_Appointment__c.Job_Code__r.Job_Type__c, 'New Connection')),'requiredBlock','')}" layout="block"/>
+                        <apex:selectList size="1" id="ssc" value="{!EON_Appointment__c.Requested_SSC__c}"  required="{!IF(AND(NOT(ISBLANK(EON_Appointment__c.Job_Code__c)),NOT(ISBLANK(EON_Appointment__c.Job_Code__r.Job_Type__c)),CONTAINS(EON_Appointment__c.Job_Code__r.Job_Type__c, 'New Connection')),true,false)}">
+                            <apex:selectOptions id="sscoptions" value="{!EonSSC}"></apex:selectOptions>
+                        </apex:selectList>
+                    </apex:outputPanel>
+                    <!--CH19 End-->
+               <!-- </apex:pageBlockSectionItem> -- CH29.old .end -->
+               
+               <!-- CH33.Start -->
+               <apex:pageBlockSectionItem helpText="{!$ObjectType.EON_Appointment__c.Fields.Requested_SSC__c.inlineHelpText}" 
+                           rendered="{!IsReqestedEditable}">
+               <apex:outputLabel id="Requested" value="Requested SSC"></apex:outputLabel>
+                        <apex:outputPanel styleClass="requiredInput" layout="block" >
+                    <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                        <apex:selectList size="1" id="ssc" value="{!EON_Appointment__c.Requested_SSC__c}" >
+                            <apex:selectOptions id="sscoptions" value="{!EonSSCForGroup}"></apex:selectOptions>
+                        </apex:selectList>
+                    </apex:outputPanel>                   
+               </apex:pageBlockSectionItem>
+               <!-- CH33.End -->
+               
+                <apex:outputField value="{!EON_Appointment__c.Requested_SSC__c}" rendered="{!NOT(IsReqestedEditable)}"/> <!--CH29.New -->
+                  <apex:outputText value="" rendered="{!NOT(IsReqestedEditable)}"/> <!--CH29.New -->
+              
+                <apex:inputField id="Notes" value="{!EON_Appointment__c.Notes__c}"/>
+                <!--CH19 Start-->
+                <!-- CH30 Commented
+                <apex:inputField id="eMeter" required="true" value="{!EON_Appointment__c.Planned_E_Meter_Type__c}" rendered="{!OR(AND(NOT(ISBLANK(EON_Appointment__c.Job_Code__c)),NOT(ISBLANK(EON_Appointment__c.Job_Code__r.Job_Type__c)),CONTAINS(EON_Appointment__c.Job_Code__r.Job_Type__c, 'New Connection'),NOT(ISBLANK(EON_Appointment__c.MPAN__c))),AND(NOT(ISBLANK(EON_Appointment__c.Job_Code__c)),CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Name),'OOAMETERFUNCCHANGE')))}"/><!--CH25-->
+                
+                <!-- CH32.Start -->
+                <apex:pageblockSectionItem id="pbs99" rendered="{!CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Name),'OOAEINSTALLBIND')}">
+                    <apex:outputLabel for="eMeter1" value="Planned E Meter Type"/>
+                    <apex:outputField id="eMeter1" value="{!EON_Appointment__c.Planned_E_Meter_Type__c}" />
+                </apex:pageblockSectionItem>                
+                <!-- CH32.Start-->                
+                
+                <!-- CH32 added additional condition -->
+                <apex:inputField id="eMeter" required="true" value="{!EON_Appointment__c.Planned_E_Meter_Type__c}" 
+                    rendered="{! AND(NOT(CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Name),'OOAEINSTALLBIND')), 
+                        OR(AND(NOT(ISBLANK(EON_Appointment__c.Job_Code__c)),NOT(ISBLANK(EON_Appointment__c.Job_Code__r.Job_Type__c)),CONTAINS(EON_Appointment__c.Job_Code__r.Job_Type__c, 'New Connection'),NOT(ISBLANK(EON_Appointment__c.MPAN__c))),AND(NOT(ISBLANK(EON_Appointment__c.Job_Code__c)),CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Name),'OOAMETERFUNCCHANGE'))
+                        , EON_Appointment__c.Appointment_reason_code__r.Name == 'Emergency Call Out',
+                        EON_Appointment__c.Appointment_reason_code__r.Name == 'Fault'))}"/><!--CH25-->                        
+                        
+                <apex:outputText />
+                
+                <!-- CH32.Start -->
+                <apex:outputField id="gMeter1" value="{!EON_Appointment__c.Planned_G_Meter_Type__c}" 
+                            rendered="{!CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Name),'OOAEINSTALLBIND')}"/>
+                <!-- CH32.End-->                
+                
+                <!-- CH32.End Added one more condition in rendered--> 
+                <apex:inputField id="gMeter" required="true" value="{!EON_Appointment__c.Planned_G_Meter_Type__c}" 
+                    rendered="{!AND(NOT(CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Name),'OOAEINSTALLBIND')),
+                    AND(NOT(ISBLANK(EON_Appointment__c.Job_Code__c)),NOT(ISBLANK(EON_Appointment__c.Job_Code__r.Job_Type__c)),CONTAINS(EON_Appointment__c.Job_Code__r.Job_Type__c, 'New Connection'),NOT(ISBLANK(EON_Appointment__c.MPRN__c))))}"/>
+                
+                <apex:inputHidden id="apptReason" value="{!EON_Appointment__c.Appointment_reason_code__r.Name}"/>
+                <apex:inputHidden id="jobCode" value="{!EON_Appointment__c.Job_Code__r.Name}"/>
+                <script type="text/javascript">
+                    var j$ = jQuery.noConflict();
+                    (function(){
+                        var apptReasion = '{!EON_Appointment__c.Appointment_reason_code__r.Name}';
+                        var jobcode = '{!EON_Appointment__c.Job_Code__r.Name}';
+                        var jobType = '{!EON_Appointment__c.Job_Code__r.Job_Type__c}';
+                        var mpan = '{!EON_Appointment__c.MPAN__c}';
+                        var mprn = '{!EON_Appointment__c.MPRN__c}';
+                        if(jobcode == 'OOAMETERFUNCCHANGE'){
+                            j$("[id$=eMeter] option[value='MS1']").remove();
+                        }
+                        if ( jobType != '' && jobType != null && jobType.indexOf("New") >= 0 && jobType.indexOf("Connection") >= 0 ) {
+                            if ( mpan != null && mpan != '' ){
+                                if ( jobcode.indexOf("SMART") >= 0 || jobcode.indexOf("smart") >= 0 ){
+                                    j$("[id$=eMeter] option[value='MCL']").remove();
+                                    j$("[id$=eMeter] option[value='KEY']").remove();//CH23
+                                }else {
+                                    j$("[id$=eMeter] option[value='MS1']").remove();
+                                }
+                            }
+                            if ( mprn != null && mprn != '' ){
+                                if ( jobcode.indexOf("SMART") >= 0 || jobcode.indexOf("smart") >= 0 ){
+                                    j$("[id$=gMeter] option[value='MCL']").remove();
+                                    j$("[id$=gMeter] option[value='PP']").remove();
+                                }else {
+                                    j$("[id$=gMeter] option[value='MS1']").remove();
+                                }
+                            }
+                        }
+                    })();
+                </script>
+                <!--CH19 End-->
+                <!--CH02.Start-->
+                <apex:outputField id="apptDate" value="{!EON_Appointment__c.Appointment_Date__c}"/>
+                <apex:inputField id="install"  styleClass="RemoveNone" value="{!EON_Appointment__c.Install_SED_flag__c}" rendered="{!AND(NOT(ISBLANK(EON_Appointment__c.Job_Code__c)),NOT(ISBLANK(EON_Appointment__c.Job_Code__r.Job_Type__c)),CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Job_Type__c),'SMART'))}"/>
+                <apex:inputField id="dvd" value="{!EON_Appointment__c.DVD_Requested__c}"/>
+                <apex:inputField id="blPrint" value="{!EON_Appointment__c.Braille__c}"/>
+                <apex:inputField id="call2" value="{!EON_Appointment__c.Call_2_Days_before_appointment_Required__c}"/>
+                <apex:inputField id="Large_Print" value="{!EON_Appointment__c.Large_Print__c}"/>
+                <!--CH02.End--> 
+                
+                <!-- CH32.Start   --> 
+                <apex:pageblockSectionItem rendered="{!CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Name),'OOAEINSTALLBIND')}"> 
+                    <apex:outputLabel value="Planned Meter Mode"  for="eMeter1"/>
+                    <apex:outputField id="eMeter1" value="{!EON_Appointment__c.Planned_Meter_Mode__c}" />    
+                </apex:pageblockSectionItem>                
+                <!-- CH32.End   -->                 
+                
+                
+                <!--CH08.start--> <!-- CH32.Start Added new condition in rendered   -->
+                <apex:pageblockSectionItem rendered="{!AND(NOT(CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Name),'OOAEINSTALLBIND')) ,
+                    AND(NOT(ISBLANK(EON_Appointment__c.Job_Code__c))  , CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Name),'SMART'))) }">
+                    <apex:outputLabel value="Planned Meter Mode" for="meterMode"/>
+                    <apex:actionRegion >
+                        <apex:inputField id="meterMode" value="{!EON_Appointment__c.Planned_Meter_Mode__c}" required="true"><!--CH26-->
+                            <apex:actionSupport event="onchange" action="{!setVisibilityPayg}" rerender="op1,mymsg" />
+                        </apex:inputField>
+                    </apex:actionRegion>
+                </apex:pageblockSectionItem>
+                
+                <apex:inputHidden id="hJobType" value="{!EON_Appointment__c.h_Job_Type__c}"/>
+                <!-- CH08.end -->
+                <!-- CH15.start --> 
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel value="Assisted Work Reason"/>
+                    <apex:inputField value="{!EON_Appointment__c.Assisted_Work_Reason__c}">
+                    </apex:inputfield>
+                </apex:pageblockSectionItem>
+                <apex:inputHidden value="{!EON_Appointment__c.h_Job_Code__c}"/>
+                <!-- CH15.end -->    
+                <!-- CH13.start -->
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel id="AppRea" value="Appointment Reason" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block" >
+                        <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                        <apex:selectList id="selReason" label="Appointment Reason" size="1" value="{!EON_Appointment__c.Appointment_reason_code__c}" 
+                                required="true" onchange="displayPlannedEMeterType();">
+                            <apex:selectOptions value="{!appReasonLst}"/>
+                        </apex:selectList>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <!-- CH13.end -->        
+                <apex:inputHidden id="CusType" value="{!EON_Appointment__c.H_Customer_type__c}"/>
+                <apex:inputHidden id="FuelType" value="{!EON_Appointment__c.H_Fuel_Type__c}"/>
+                <apex:inputHidden id="ParType" value="{!EON_Appointment__c.Parking_Type__c}"/>
+                <apex:inputHidden id="E_MeterType" value="{!EON_Appointment__c.E_Meter_Location__c}"/>
+                <apex:inputHidden id="G_MeterType" value="{!EON_Appointment__c.G_Meter_Location__c}"/>
+            </apex:pageBlockSection>
+            <!--CH02.Start-->
+            <apex:actionRegion >
+                <apex:pageBlockSection columns="2" id="pbs2" title="Key Collection">
+                    <apex:inputField id="Key_Coll" value="{!EON_Appointment__c.Key_Collection_Required__c}">
+                        <apex:actionSupport event="onclick" action="{!isKeycollection}" reRender="pbs2,mymsg,lab,lab1"/>
+                    </apex:inputField>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel id="lab" value="Key Person Name" for="Key_Pers" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                            <apex:inputField id="Key_Pers" value="{!EON_Appointment__c.Key_Person_Name__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel id="lab1" value="Key Contact Number" for="Key_Cont" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                            <apex:inputField id="Key_Cont" value="{!EON_Appointment__c.Key_Contact_Number__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:inputField id="Key_Buil_num" value="{!EON_Appointment__c.Key_Building_Number__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Buil_name" value="{!EON_Appointment__c.Key_Building_Name__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Sub" value="{!EON_Appointment__c.Key_Sub_Building_Name__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Thor" value="{!EON_Appointment__c.Key_Thorofare__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Depd_Thor" value="{!EON_Appointment__c.Key_Dependant_Thorofare__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Depd_Local" value="{!EON_Appointment__c.Key_Dependant_Locality__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Doub" value="{!EON_Appointment__c.Key_Double_Dependant_Locality__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Town" value="{!EON_Appointment__c.Key_Town__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_County" value="{!EON_Appointment__c.Key_County__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Post" value="{!EON_Appointment__c.Key_Post_Code__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Country" value="{!EON_Appointment__c.Key_Country__c}" rendered="{!EON_Appointment__c.Key_Collection_Required__c}"/>
+                </apex:pageBlockSection>
+            </apex:actionRegion>
+            <apex:pageBlockSection columns="2" id="pbs4" title="Meter Locations">
+                <apex:pageBlockSectionItem rendered="{!NOT(ISBLANK(EON_Appointment__c.MPAN__c))}">
+                    <!--CH20-->
+                    <apex:outputLabel id="E_MeterO" value="E Meter Location" />
+                    <apex:selectList size="1" value="{!selectedEMetLoc}">
+                        <apex:selectOptions value="{!EMetLocLst}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!NOT(ISBLANK(EON_Appointment__c.MPRN__c))}">
+                    <!--CH20-->
+                    <apex:outputLabel id="G_MeterO" value="G Meter Location" />
+                    <apex:selectList size="1" value="{!selectedGMetLoc}">
+                        <apex:selectOptions value="{!GMetLocLst}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1" id="pbs5" title="Communication details">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel id="Delivery_MethC" value="Comm Type Code - C" />
+                    <apex:selectList size="1" value="{!selectedDeliveryMethod_c}">
+                        <apex:selectOptions value="{!DeliveryMethodLstC}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel id="Delivery_MethI" value="Comm Type Code - I" />
+                    <apex:selectList size="1" value="{!selectedDeliveryMethod_I}">
+                        <apex:selectOptions value="{!DeliveryMethodLstI}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel id="Delivery_MethR" value="Comm Type Code - R" />
+                    <apex:selectList size="1" value="{!selectedDeliveryMethod_R}">
+                        <apex:selectOptions value="{!DeliveryMethodLstR}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" id="pbs6" title="Parking details">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel id="Parlab1" value="Parking Type" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                        <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                        <apex:selectList label="Parking Type" size="1" value="{!selectedParking}" required="true">
+                            <apex:selectOptions value="{!parkingLst}"/>
+                        </apex:selectList>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <!--CH02. added new section-->
+            <apex:pageBlockSection columns="2" id="pbs8" title="Data Consent" rendered="{!AND(NOT(ISBLANK(EON_Appointment__c.Job_Code__c)),NOT(ISBLANK(EON_Appointment__c.Job_Code__r.Name)),CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Name),'SMART'))}">
+                <!--CH18-->
+                <apex:inputField id="Elec_HH" value="{!EON_Appointment__c.Elec_HH_Data_Opted__c}"/>
+                <apex:inputField id="Elec_Daily" value="{!EON_Appointment__c.Elec_Daily_Data_Opted__c}"/>
+                <apex:inputField id="Gas_HH" value="{!EON_Appointment__c.Gas_HH_Data_Opted__c}" rendered="{!AND(NOT(ISBLANK(EON_Appointment__c.Job_Code__c)),CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Name),'OOASMARTDFEXCH'))}" />
+                <apex:inputField id="Gas_Daily" value="{!EON_Appointment__c.Gas_Daily_Data_Opted__c}" rendered="{!AND(NOT(ISBLANK(EON_Appointment__c.Job_Code__c)),CONTAINS(UPPER(EON_Appointment__c.Job_Code__r.Name),'OOASMARTDFEXCH'))}"/>
+            </apex:pageBlockSection>
+            <!--CH02. added new section-->
+            <!--CH02. rendering-->
+            <!-- CH08.start -->  
+            <apex:actionRegion >
+                <apex:outputPanel id="op1">
+                    <apex:pageBlockSection columns="2" id="pbs7" title="PAYG Alert Preferences" rendered="{!fieldSetVisibility}" collapsible="false">
+                        <apex:inputField id="EONSetDisc" value="{!EON_Appointment__c.E_Disconnection_warning_option_flag__c}" rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPAN__c)))}"/>
+                        <!--CH21.Start-->
+                        <apex:inputField id="PaymentOpted" value="{!EON_Appointment__c.E_Payment_Reminder_Opt_in_Flag__c}" rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPAN__c)))}">
+                            <apex:actionSupport event="onclick" action="{!isKeycollection}" reRender="pbs7,mymsg" oncomplete="clearValues(this);"/><!--CH24-->
+                        </apex:inputField>
+                        <apex:inputField id="CustomerLow" styleClass="CustLow" value="{!EON_Appointment__c.E_Low_balance_alert_flag__c}" rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPAN__c)))}">
+                            <apex:actionSupport event="onclick" action="{!isKeycollection}" reRender="pbs7,mymsg" oncomplete="clearValues(this);"/><!--CH24-->
+                        </apex:inputField>
+                        <apex:pageBlockSectionItem rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPAN__c)))}" id="payFreqPbs">
+                            <apex:outputLabel id="PaymentFreq" value="E Payment Reminder Frequency Code" for="PaymentFrequency" rendered="{!EON_Appointment__c.E_Payment_Reminder_Opt_in_Flag__c}"/><!--CH24-->
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="{!IF(EON_Appointment__c.E_Payment_Reminder_Opt_in_Flag__c,'requiredBlock','')}" layout="block"/>
+                                <apex:inputField id="PaymentFrequency" value="{!EON_Appointment__c.E_Payment_Reminder_Frequency_Code__c}" rendered="{!EON_Appointment__c.E_Payment_Reminder_Opt_in_Flag__c}"><!--CH24-->
+                                    <apex:actionSupport event="onchange" action="{!isKeycollection}" reRender="pbs7,mymsg" oncomplete="clearValues(this);"/><!--CH24-->
+                                </apex:inputField>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>    
+                        <apex:pageBlockSectionItem rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPAN__c)))}" id="lowBalPbs">
+                            <apex:outputLabel rendered="{!EON_Appointment__c.E_Low_balance_alert_flag__c}" id="LowBal" value="E LowBalanceAlertValue" for="LowBalance" /><!--CH24-->
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="{!IF(EON_Appointment__c.E_Low_balance_alert_flag__c,'requiredBlock','')}" layout="block"/>
+                                <apex:inputField id="LowBalance" value="{!EON_Appointment__c.E_LowBalanceAlertValue__c}" rendered="{!EON_Appointment__c.E_Low_balance_alert_flag__c}"><!--CH24-->
+                                    <!-- CH21.start -->
+                                    <apex:actionSupport event="onchange" action="{!isKeycollection}" reRender="pbs7,mymsg"/>
+                                    <!-- CH21.End -->
+                                </apex:inputField>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPAN__c)))}" id="payWeekPbs">
+                            <apex:outputLabel id="payWeek" value="E Payment Reminder Day Of The Week" for="PaymentWeek" rendered="{!IF(AND(EON_Appointment__c.E_Payment_Reminder_Frequency_Code__c = 'W',EON_Appointment__c.E_Payment_Reminder_Opt_in_Flag__c),TRUE, FALSE)}"/><!--CH24-->
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="{!IF(AND(EON_Appointment__c.E_Payment_Reminder_Opt_in_Flag__c,NOT(ISBLANK(EON_Appointment__c.E_Payment_Reminder_Frequency_Code__c)),CONTAINS(EON_Appointment__c.E_Payment_Reminder_Frequency_Code__c,'W')),'requiredBlock','')}" layout="block"/>
+                                <apex:inputField id="PaymentWeek" value="{!EON_Appointment__c.E_Payment_Reminder_Day_Of_The_Week__c}" rendered="{!IF(AND(EON_Appointment__c.E_Payment_Reminder_Frequency_Code__c = 'W',EON_Appointment__c.E_Payment_Reminder_Opt_in_Flag__c),TRUE, FALSE)}"><!--CH24-->
+                                    <!-- CH21.start -->
+                                    <apex:actionSupport event="onchange" action="{!isKeycollection}" reRender="pbs7,mymsg"/>
+                                    <!-- CH21.End -->
+                                </apex:inputField>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <!--CH21.End-->
+                        <apex:inputField id="TopUpCode" value="{!EON_Appointment__c.E_Top_up_Notification_Opt_in_Flag__c}" rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPAN__c)))}"/>
+                        <apex:pageBlockSectionItem rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPAN__c)))}" id="paymentDatePbs">
+                            <apex:outputLabel id="payRemDate" value="E Payment Reminder Date" for="PaymentDate" rendered="{!IF(AND(EON_Appointment__c.E_Payment_Reminder_Frequency_Code__c = 'M',EON_Appointment__c.E_Payment_Reminder_Opt_in_Flag__c),TRUE, FALSE)}"/><!--CH24-->
+                            <apex:outputPanel id="payDatePanel" styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="{!IF(AND(EON_Appointment__c.E_Payment_Reminder_Opt_in_Flag__c,NOT(ISBLANK(EON_Appointment__c.E_Payment_Reminder_Frequency_Code__c)),CONTAINS(EON_Appointment__c.E_Payment_Reminder_Frequency_Code__c,'M')),'requiredBlock','')}" layout="block"/><!--CH24-->
+                                <apex:inputField id="PaymentDate" value="{!EON_Appointment__c.E_Payment_Reminder_Date__c}" rendered="{!IF(AND(EON_Appointment__c.E_Payment_Reminder_Frequency_Code__c = 'M',EON_Appointment__c.E_Payment_Reminder_Opt_in_Flag__c),TRUE, FALSE)}">
+                                    <!-- CH21.start -->
+                                    <apex:actionSupport event="onchange" action="{!isKeycollection}" reRender="pbs7,mymsg"/>
+                                    <!-- CH21.End -->
+                                </apex:inputField>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField id="GEONSetDisc" value="{!EON_Appointment__c.G_Disconnection_warning_option_flag__c}" rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPRN__c)))}"/>
+                        <apex:inputField id="GPaymentOpted" value="{!EON_Appointment__c.G_Payment_Reminder_Opt_in_Flag__c}" rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPRN__c)))}">
+                            <!-- CH21.start -->
+                            <apex:actionSupport event="onchange" action="{!isKeycollection}" reRender="pbs7,mymsg" oncomplete="clearValues(this);"/><!--CH24-->
+                            <!-- CH21.End -->   
+                        </apex:inputField>
+                        <apex:inputField id="GCustomerLow" value="{!EON_Appointment__c.G_Low_balance_alert_flag__c}" rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPRN__c)))}">
+                            <!-- CH21.start -->
+                            <apex:actionSupport event="onchange" action="{!isKeycollection}" reRender="pbs7,mymsg" oncomplete="clearValues(this);"/><!--CH24-->
+                            <!-- CH21.End -->
+                        </apex:inputField>
+                        <apex:pageBlockSectionItem rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPRN__c)))}" id="gPayFreqPbs">
+                            <apex:outputLabel id="gascode" value="G Payment Reminder Frequency Code" for="GPaymentFrequency" rendered="{!EON_Appointment__c.G_Payment_Reminder_Opt_in_Flag__c}"/><!--CH24-->
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="{!IF(EON_Appointment__c.G_Payment_Reminder_Opt_in_Flag__c,'requiredBlock','')}" layout="block"/>
+                                <apex:inputField id="GPaymentFrequency" value="{!EON_Appointment__c.G_Payment_Reminder_Frequency_Code__c}" rendered="{!EON_Appointment__c.G_Payment_Reminder_Opt_in_Flag__c}"><!--CH24-->
+                                    <apex:actionSupport event="onchange" action="{!isKeycollection}" reRender="pbs7,mymsg" oncomplete="clearValues(this);"/><!--CH24-->
+                                </apex:inputField>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPRN__c)))}" id="gLowBalPbs">
+                            <apex:outputLabel rendered="{!EON_Appointment__c.G_Low_balance_alert_flag__c}" id="GLowBal" value="G LowBalanceAlertValue" for="GLowBalance" /><!--CH24-->
+                            <apex:outputPanel styleClass="{!IF(EON_Appointment__c.G_Low_balance_alert_flag__c,'requiredInput','')}" layout="block">
+                                <apex:outputPanel styleClass="{!IF(EON_Appointment__c.G_Low_balance_alert_flag__c,'requiredBlock','')}" layout="block"/><!--CH24-->
+                                <apex:inputField id="GLowBalance" value="{!EON_Appointment__c.G_LowBalanceAlertValue__c}" rendered="{!EON_Appointment__c.G_Low_balance_alert_flag__c}">
+                                    <!-- CH21.start -->
+                                    <apex:actionSupport event="onchange" action="{!isKeycollection}" reRender="pbs7,mymsg"/>
+                                    <!-- CH21.End -->
+                                </apex:inputField>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPRN__c)))}" id="gPayWeekPbs">
+                            <apex:outputLabel id="gpayWeek" value="G Payment Reminder Day Of The Week" for="GPaymentWeek" rendered="{!IF(AND(EON_Appointment__c.G_Payment_Reminder_Frequency_Code__c = 'W',EON_Appointment__c.G_Payment_Reminder_Opt_in_Flag__c),TRUE, FALSE)}"/><!--CH24-->
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="{!IF(AND(EON_Appointment__c.G_Payment_Reminder_Opt_in_Flag__c,NOT(ISBLANK(EON_Appointment__c.G_Payment_Reminder_Frequency_Code__c)),CONTAINS(EON_Appointment__c.G_Payment_Reminder_Frequency_Code__c,'W')),'requiredBlock','')}" layout="block"/><!--CH24-->
+                                <apex:inputField id="GPaymentWeek" value="{!EON_Appointment__c.G_Payment_Reminder_Day_Of_The_Week__c}" rendered="{!IF(AND(EON_Appointment__c.G_Payment_Reminder_Frequency_Code__c = 'W',EON_Appointment__c.G_Payment_Reminder_Opt_in_Flag__c),TRUE, FALSE)}"><!--CH24-->
+                                    <!-- CH21.start -->
+                                    <apex:actionSupport event="onchange" action="{!isKeycollection}" reRender="pbs7,mymsg"/>
+                                    <!-- CH21.End -->
+                                </apex:inputField>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField id="GTopUpCode" value="{!EON_Appointment__c.G_Top_up_Notification_Opt_in_Flag__c}" rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPRN__c)))}"/>
+                        <apex:pageBlockSectionItem rendered="{!AND(fieldSetVisibility,NOT(ISBLANK(EON_Appointment__c.MPRN__c)))}" id="gPayDatePbs">
+                            <apex:outputLabel id="gpayRemDate" value="G Payment Reminder Date" for="GPaymentDate" rendered="{!IF(AND(EON_Appointment__c.G_Payment_Reminder_Frequency_Code__c = 'M',EON_Appointment__c.G_Payment_Reminder_Opt_in_Flag__c),TRUE, FALSE)}"/><!--CH24-->
+                            <apex:outputPanel id="gpayRemDatePanel" styleClass="{!IF(AND(EON_Appointment__c.G_Payment_Reminder_Opt_in_Flag__c,NOT(ISBLANK(EON_Appointment__c.G_Payment_Reminder_Frequency_Code__c)),CONTAINS(EON_Appointment__c.G_Payment_Reminder_Frequency_Code__c,'M')),'requiredInput','')}" layout="block">
+                                <apex:outputPanel styleClass="{!IF(AND(EON_Appointment__c.G_Payment_Reminder_Opt_in_Flag__c,NOT(ISBLANK(EON_Appointment__c.G_Payment_Reminder_Frequency_Code__c)),CONTAINS(EON_Appointment__c.G_Payment_Reminder_Frequency_Code__c,'M')),'requiredBlock','')}" layout="block"/>
+                                <apex:inputField id="GPaymentDate" value="{!EON_Appointment__c.G_Payment_Reminder_Date__c}" rendered="{!IF(AND(EON_Appointment__c.G_Payment_Reminder_Frequency_Code__c = 'M',EON_Appointment__c.G_Payment_Reminder_Opt_in_Flag__c),TRUE, FALSE)}"><!--CH24-->
+                                    <!-- CH21.start -->
+                                    <apex:actionSupport event="onchange" action="{!isKeycollection}" reRender="pbs7,mymsg"/>
+                                    <!-- CH21.End -->
+                                </apex:inputField>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <!--CH21.END-->
+                        <!-- CH06.New.End -->
+                    </apex:pageBlockSection>
+                </apex:outputPanel>
+            </apex:actionRegion>
+            <!-- CH08.end -->  
+            <apex:pageBlockSection columns="1" id="addApptVul" title="Add Appointment Vulnerability" >
+                <!--CH01 Changed to Eon AppointmentVulnerability-->
+                <apex:variable var="rowCounter" value="{!0}"/>
+                <apex:actionRegion >
+                    <apex:pageMessage summary="{!addErrorMsg}." severity="Error" strength="2" rendered="{!AND(NOT(ISBLANK(addErrorMsg)),NOT(CONTAINS(addErrorMsg, 'Contact')))}" />
+                    <apex:panelGrid width="100%" columns="3" id="PG">
+                        <apex:actionStatus id="addingRowStatus">
+                            <apex:facet name="start">
+                                <apex:commandButton id="addingRow" disabled="true" value="Adding..." />
+                            </apex:facet>
+                            <apex:facet name="stop">
+                                <apex:commandButton status="addingRowStatus" id="addRow" value="Add Row" action="{!addRow}" reRender="addApptVul,mymsg"/>
+                            </apex:facet>
+                        </apex:actionStatus>
+                        <apex:pageBlockSectionItem >
+                            <!--CH12.Start-->
+                            <apex:outputLabel styleClass="SalesforceDetailFont" Value="Description"/>
+                            <apex:selectList label="Vulnerability Description" size="1" value="{!selectedVulnerability}" >
+                                <apex:selectOptions value="{!VulnerabilityLst}"/>
+                            </apex:selectList>
+                            <!--CH12.End-->
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel styleClass="SalesforceDetailFont">VulnerabilityTypeID</apex:outputLabel>
+                            <apex:inputField id="Vuln_code" styleClass="RemoveNone" value="{!EON_Appt_Vuln.VulnerabilityTypeID__c}"/>
+                        </apex:pageBlockSectionItem>
+                    </apex:panelGrid>
+                    <!--CH01 Changed to Eon AppointmentVulnerability-->
+                    <!-- CH01.Start Adding Eon Appointment Vulnerabilities section -->
+                    <apex:pageMessage summary="There are no Eon Appointment Vulnerabilities." severity="Info" strength="2" rendered="{!IF(lstApptVulnerability.size > 0,false,true)}" />
+                    <apex:pageBlockTable id="eonAppVulTable" value="{!lstApptVulnerability}" var="eonVulnerability" rendered="{!IF(lstApptVulnerability.size > 0,true,false)}">
+                        <apex:column headerValue="Action" id="act">
+                            <apex:commandLink id="remove" action="{!removeRow}" reRender="addApptVul,mymsg">
+                                <apex:image value="/img/func_icons/remove12_on.gif"/>
+                                <apex:param name="selEonAppVul" value="{!rowCounter}" assignTo="{!removeIndex}"/>
+                                <apex:variable var="rowCounter" value="{!rowCounter+1}"/>
+                            </apex:commandLink>
+                        </apex:column>
+                        <apex:column id="des" value="{!eonVulnerability.Description__c}"/>
+                        <apex:column id="type" value="{!eonVulnerability.VulnerabilityTypeID__c}"/>
+                    </apex:pageBlockTable>
+                </apex:actionRegion>
+            </apex:pageBlockSection>
+            <!-- CH01.End Adding Eon Appointment Vulnerabilities section -->
+            <!-- CH07.Start -->
+            <apex:pageBlockSection columns="1" id="addApptCont" title="Add Appointment Contacts">
+                <apex:variable var="rowCounter" value="{!0}"/>
+                <apex:actionRegion >
+                <!-- CH31  Adding Eon Appointment contact warning if only one appointment -->
+                  <apex:pageMessage summary="Atleast one appointment contact record is mandatory" severity="Info" strength="2" rendered="{!IF(lstApptContact.size ==1,true,false)}" />
+
+                    <apex:pageMessage summary="{!addErrorMsg}." severity="Error" strength="2" rendered="{!NOT(ISBLANK(addErrorMsg))}" />
+                    <apex:panelGrid width="100%" columns="3" id="PG1">
+                        <apex:pageBlockSectionItem HelpText="{$ObjectType.EON_Appointment_Contact__c.fields.Contact_Type__c.inlineHelpText}">
+                            <apex:outputPanel >
+                                <apex:outputLabel id="Cont" styleClass="SalesforceDetailFont" value="Contact Type"/> 
+                            </apex:outputPanel>
+                            <!--CH12.Start-->
+                            <apex:selectList label="Contact Type" size="1" value="{!selectedContact}" >
+                                <apex:selectOptions value="{!ContactLst}"/>
+                            </apex:selectList>
+                            <!--CH12.End-->
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel styleClass="SalesforceDetailFont">Contact Full Name</apex:outputLabel>
+                            <apex:inputField id="Contact_Full" value="{!ApptCont.Contact_Full_Name__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel id="Mediatypelab" styleClass="SalesforceDetailFont" value="Media Type" />
+                            <apex:selectList label="Parking Type" size="1" value="{!selectedMediaType}">
+                                <apex:selectOptions value="{!MediaTypeLst}"/>
+                            </apex:selectList>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel styleClass="SalesforceDetailFont">Media Detail  </apex:outputLabel>
+                            <apex:inputField id="Media_Detail" value="{!ApptCont.Media_Detail__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel styleClass="SalesforceDetailFont">Customer Assistant</apex:outputLabel>
+                            <apex:inputField id="Customer_Assist" value="{!ApptCont.Customer_Assistant__c}"/>
+                        </apex:pageBlockSectionItem>
+                    </apex:panelGrid>
+                    <apex:actionStatus id="addingRowStatus">
+                        <apex:facet name="start">
+                            <apex:commandButton id="addingRow" disabled="true" value="Adding..." />
+                        </apex:facet>
+                        <apex:facet name="stop">
+                            <apex:commandButton status="addingRowStatus" id="addRow" value="Add Row" action="{!addRowCon}" reRender="addApptCont,mymsg"/>
+                        </apex:facet>
+                    </apex:actionStatus>
+                    <br/><br/>
+                    <apex:pageMessage summary="There are no Eon Appointment Contacts." severity="Info" strength="2" rendered="{!IF(lstApptContact.size > 0,false,true)}" />
+                    <apex:pageBlockTable id="eonAppConTable" value="{!lstApptContact}" var="eonCon" rendered="{!IF(lstApptContact.size > 0,true,false)}">
+                        <apex:column headerValue="Action" id="act">
+                            <apex:commandLink id="remove" immediate="true" action="{!removeRowCon}" reRender="addApptCont,mymsg">
+                                <apex:image value="/img/func_icons/remove12_on.gif"/>
+                                <apex:param name="selEonAppVul" value="{!rowCounter}" assignTo="{!removeIndex}"/>
+                                <apex:variable var="rowCounter" value="{!rowCounter+1}"/>
+                            </apex:commandLink>
+                        </apex:column>
+                        <apex:column id="Ctyp" value="{!eonCon.Contact_Type__c}"/>
+                        <apex:column id="CFN" value="{!eonCon.Contact_Full_Name__c}"/>
+                        <apex:column id="CMT" value="{!eonCon.Media_Type__c}"/>
+                        <apex:column id="CMD" value="{!eonCon.Media_Detail__c}"/>
+                        <apex:column id="CCA" value="{!eonCon.Customer_Assistant__c}"/>
+                    </apex:pageBlockTable>
+                </apex:actionRegion>
+            </apex:pageBlockSection>
+            <!-- CH07.End -->
+        </apex:pageBlock>
+    </apex:form>
+    <script>
+        if(document.getElementById("mypage:myform:pb1:pbs1:CusType") != null && document.getElementById("mypage:myform:pb1:pbs1:CusType").value == 'RES' && document.getElementById("mypage:myform:pb1:pbs1:install") != null)
+            document.getElementById("mypage:myform:pb1:pbs1:install").value = 'Yes';
+        else if(document.getElementById("mypage:myform:pb1:pbs1:CusType") != null && document.getElementById("mypage:myform:pb1:pbs1:CusType").value == 'SME' && document.getElementById("mypage:myform:pb1:pbs1:install") != null)
+            document.getElementById("mypage:myform:pb1:pbs1:install").value = 'No';
+        //CH24
+        function clearValues(a){
+            if(a.id === 'mypage:myform:pb1:pbs7:CustomerLow'){
+                if(document.getElementById('mypage:myform:pb1:pbs7:lowBalPbs:LowBalance') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:lowBalPbs:LowBalance').value = null;
+            }
+            if(a.id === 'mypage:myform:pb1:pbs7:PaymentOpted'){
+                if(document.getElementById('mypage:myform:pb1:pbs7:payFreqPbs:PaymentFrequency') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:payFreqPbs:PaymentFrequency').value = '';
+                if(document.getElementById('mypage:myform:pb1:pbs7:payWeekPbs:PaymentWeek') != null){
+                    document.getElementById('mypage:myform:pb1:pbs7:payWeekPbs:PaymentWeek').value = '';
+                    document.getElementById('mypage:myform:pb1:pbs7:payWeekPbs:PaymentWeek').style.display = 'none';
+                }
+                if(document.getElementById('mypage:myform:pb1:pbs7:paymentDatePbs:PaymentDate') != null){
+                    document.getElementById('mypage:myform:pb1:pbs7:paymentDatePbs:PaymentDate').value = null;
+                    document.getElementById('mypage:myform:pb1:pbs7:paymentDatePbs:PaymentDate').style.display = 'none';
+                }
+                if(document.getElementById('mypage:myform:pb1:pbs7:payWeekPbs:payWeek') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:payWeekPbs:payWeek').style.display = 'none';
+                if(document.getElementById('mypage:myform:pb1:pbs7:paymentDatePbs:payRemDate') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:paymentDatePbs:payRemDate').style.display = 'none';
+                if(document.getElementById('mypage:myform:pb1:pbs7:paymentDatePbs:payDatePanel') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:paymentDatePbs:payDatePanel').style.display = 'none';
+            }
+            if(a.id === 'mypage:myform:pb1:pbs7:payFreqPbs:PaymentFrequency'){
+                if(document.getElementById('mypage:myform:pb1:pbs7:payWeekPbs:PaymentWeek') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:payWeekPbs:PaymentWeek').value = '';
+                if(document.getElementById('mypage:myform:pb1:pbs7:paymentDatePbs:PaymentDate') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:paymentDatePbs:PaymentDate').value = null;
+            }
+            if(a.id === 'mypage:myform:pb1:pbs7:GCustomerLow'){
+                if(document.getElementById('mypage:myform:pb1:pbs7:gLowBalPbs:GLowBalance') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:gLowBalPbs:GLowBalance').value = null;
+            }
+            if(a.id === 'mypage:myform:pb1:pbs7:GPaymentOpted'){
+                if(document.getElementById('mypage:myform:pb1:pbs7:gPayFreqPbs:GPaymentFrequency') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:gPayFreqPbs:GPaymentFrequency').value = '';
+                if(document.getElementById('mypage:myform:pb1:pbs7:gPayWeekPbs:GPaymentWeek') != null){
+                    document.getElementById('mypage:myform:pb1:pbs7:gPayWeekPbs:GPaymentWeek').value = '';
+                    document.getElementById('mypage:myform:pb1:pbs7:gPayWeekPbs:GPaymentWeek').style.display = 'none';
+                }
+                if(document.getElementById('mypage:myform:pb1:pbs7:gPayWeekPbs:gpayWeek') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:gPayWeekPbs:gpayWeek').style.display = 'none';
+                if(document.getElementById('mypage:myform:pb1:pbs7:gPayDatePbs:gpayRemDate') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:gPayDatePbs:gpayRemDate').style.display = 'none';
+                if(document.getElementById('mypage:myform:pb1:pbs7:gPayDatePbs:GPaymentDate') != null){
+                    document.getElementById('mypage:myform:pb1:pbs7:gPayDatePbs:GPaymentDate').value = null;
+                    document.getElementById('mypage:myform:pb1:pbs7:gPayDatePbs:GPaymentDate').style.display = 'none';
+                }
+                if(document.getElementById('mypage:myform:pb1:pbs7:gPayDatePbs:gpayRemDatePanel') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:gPayDatePbs:gpayRemDatePanel').style.display = 'none';
+            }
+            if(a.id === 'mypage:myform:pb1:pbs7:gPayFreqPbs:GPaymentFrequency'){
+                if(document.getElementById('mypage:myform:pb1:pbs7:gPayWeekPbs:GPaymentWeek') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:gPayWeekPbs:GPaymentWeek').value = '';
+                if(document.getElementById('mypage:myform:pb1:pbs7:gPayDatePbs:GPaymentDate') != null)
+                    document.getElementById('mypage:myform:pb1:pbs7:gPayDatePbs:GPaymentDate').value = null;
+            }
+        }
+        if(jQuery("[id$=meterMode]").val() != ''){jQuery("[id$=meterMode]").attr("disabled", true);} //CH28
+    </script>
+</apex:page>

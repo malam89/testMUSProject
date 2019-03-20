@@ -1,0 +1,27 @@
+<!---
+    Description : This page is used to display the Complaint search results.
+--->
+<!--
+    Created By : Aruna Manjari
+    Created Date : 09-April-2016
+    Service Request : SR_EON_PC_028
+-->
+ 
+   <apex:page controller="EON_NonCustomer_Result_Ctrl" readOnly="true" action="{!displayRecord}">
+    <apex:form >
+        <apex:pageBlock title="Complain Search Results">
+            <apex:pageBlockTable value="{!AppointmentResults}" var="appointment">
+                <apex:column headerValue="Complaint">
+                    <apex:outputLink value="/{!appointment.id}" target="_blank" ><b>{!appointment.name}</b> </apex:outputLink>
+                </apex:column>  
+                
+                <apex:column value="{!appointment.Customer_Name1__c}" HeaderValue="Customer Name"/>
+                <apex:column value="{!appointment.Complaint_Description__c}" HeaderValue="Complaint description"/>
+                <apex:column value="{!appointment.Complaint_Status__c}" HeaderValue="Complaint status"/> 
+                <apex:column value="{!appointment.Status_Update_Time__c}" HeaderValue="Status update time"/> 
+               
+                  
+            </apex:pageBlockTable>
+        </apex:pageblock>
+    </apex:form>    
+</apex:page>

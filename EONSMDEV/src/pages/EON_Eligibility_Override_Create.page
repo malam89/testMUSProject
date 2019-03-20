@@ -1,0 +1,52 @@
+<!---
+    Description : This page is used to override the insert EON Eligibility Overrides record.
+    controller : EON_Eligibility_Override_Create_Ctrl
+--->
+<!--
+    Created By : Praveen G
+    Created Date : 30/10/2017
+    Service Request : SR_OptiMUS_EON_136
+-->
+
+<apex:page standardController="EON_Eligibility_Override__c" extensions="EON_Eligibility_Override_Create_Ctrl">
+
+    <apex:form id="formID">
+        <apex:pageMessages escape="false" id="msgID"/>
+        <apex:sectionHeader title="EON Eligibility Override New" subtitle="New EON Eligibility Override" />
+        <apex:pageblock title="EON Eligibility Overrides New">
+            <apex:pageBlockButtons id="pbbButtons">
+                <apex:commandbutton value="Save" action="{!saveRec}"/> 
+                <apex:commandbutton value="Cancel" action="{!gotoSite}" immediate="true"/>
+            </apex:pageBlockButtons>
+            
+            <apex:pageblocksection title="Information">
+                <apex:pageblocksectionItem >
+                    <apex:outputlabel value="Customer"></apex:outputlabel>
+                    <apex:outputlabel value="{!customerName}"></apex:outputlabel>                   
+                </apex:pageblocksectionItem>
+                
+                <apex:pageblocksectionItem >
+                    <apex:outputlabel value="Premise"></apex:outputlabel>
+                    <apex:outputlabel value="{!siteName}"></apex:outputlabel>                  
+                </apex:pageblocksectionItem> 
+                
+                <apex:pageblocksectionItem >
+                    <apex:outputlabel value="Eligibility Override Code"></apex:outputlabel>
+                    <apex:outputPanel id="codeRequired" layout="block" styleClass="requiredInput">
+                        <apex:outputPanel layout="block" styleClass="requiredBlock"/>
+                        <apex:selectList id="vType" size="1" value="{!selectedFlag}" title="VType"> 
+                            <apex:selectOptions value="{!EligibilityFlags}" rendered="true"/>
+                        </apex:selectList>
+                    </apex:outputPanel>
+             
+                </apex:pageblocksectionItem> 
+                
+                
+                <apex:pageblocksectionItem >
+                    <apex:outputlabel value="Eligibility Change Type "></apex:outputlabel>
+                    <apex:outputlabel value="I"></apex:outputlabel>                
+                </apex:pageblocksectionItem>                                                                              
+            </apex:pageblocksection>
+        </apex:pageblock>
+    </apex:form>
+</apex:page>

@@ -1,0 +1,1 @@
+public class SOAPException extends Exception {}

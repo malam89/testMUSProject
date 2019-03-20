@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ApexPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>36.0</apiVersion>
+    <availableInTouch>false</availableInTouch>
+    <confirmationTokenRequired>false</confirmationTokenRequired>
+    <description>This page has created as part of SR and this will be used for selecting the cancel reason field record by clicking the Cancel 
+Appointment button</description>
+    <label>EON_Select_Appointment_Cancel_Region</label>
+</ApexPage>

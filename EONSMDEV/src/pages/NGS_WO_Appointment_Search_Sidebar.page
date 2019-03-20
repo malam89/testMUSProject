@@ -1,0 +1,36 @@
+<!--- 
+    Description : This page will be displayed as side bar component for searching NGS Work Order Appointment
+--->
+<!--
+    Created By : Puneet Mehta
+    Created Date : 06/02/2017
+    Service Request : SR_OptiMUS_NG_012
+-->
+<apex:page id="pageID" docType="html-5.0">
+    <script>
+        function Redirect(){
+            var woNumber = document.getElementById('pageID:NGA_WO_AppointmentSearch:woNumber').value;
+            var address1 = document.getElementById('pageID:NGA_WO_AppointmentSearch:address1').value;
+            var postCode = document.getElementById('pageID:NGA_WO_AppointmentSearch:postCode').value;
+            window.top.location.href = "/apex/NGS_WO_Appointment_Search_Results?woNumber="+woNumber+"&address1="+address1+"&postCode="+postCode;         
+            return false;
+        }
+        window.onload = setFocus
+    function setFocus() {
+        }         
+    </script>
+    <div style="height: 0px; clear: both;"></div>
+    <b>NGS Work Order Appointment</b>
+    <apex:form id="NGA_WO_AppointmentSearch" style="display: block;">
+        <apex:outputText >Work Order Number: </apex:outputText><br/>
+        <apex:inputText id="woNumber" style="width:160px"/><br/>
+
+        <apex:outputText >Address: </apex:outputText><br/>
+        <apex:inputText id="address1" style="width:160px"/><br/>
+
+        <apex:outputText >Post Code: </apex:outputText><br/>
+        <apex:inputText id="postCode" style="width:160px"/><br/>
+        <br/>
+        <input value="---Search---" type="submit" onclick="return Redirect()"></input>                                  
+    </apex:form>
+</apex:page>

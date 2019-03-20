@@ -1,0 +1,6 @@
+<apex:page standardController="EON_Appointment__c" extensions="EON_Appointment_Asynchronous_Helper">
+    <style>
+    .color {color:red;font-size:15px;}
+  </style>
+    <apex:outputLabel id="Helpertext1" styleClass="color" value="{!selectedValue}"/>
+</apex:page>

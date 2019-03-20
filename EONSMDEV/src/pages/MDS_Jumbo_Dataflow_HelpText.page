@@ -1,0 +1,6 @@
+<apex:page standardController="MDS_Jumbo_Dataflow_Switch__c">
+    <style>
+    .color {color:red;font-size:15px;}
+  </style>
+    <apex:outputLabel styleClass="color">This object has been built to switch on / off the data flows to Wheatley Jumbo and MDS MOPMAM systems as part of the MDS MOPMAM Project</apex:outputLabel>
+</apex:page>

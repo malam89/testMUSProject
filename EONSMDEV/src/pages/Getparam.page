@@ -1,0 +1,35 @@
+<apex:page >
+    <script src="/soap/ajax/30.0/connection.js" type="text/javascript"></script>
+    <script src="/soap/ajax/30.0/apex.js" type="text/javascript"></script>
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-1.7.2.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-ui-1.8.21.custom.min.js')}" />
+    
+     <script type="text/javascript">
+     sforce.connection.sessionId = '{!$Api.Session_ID}';
+           j$ = jQuery.noConflict();
+        j$( document ).ready(function() {
+            //alert('alam');
+            alert('----'+getParameter('mpan'));
+        });
+        
+        
+        
+        
+ function getParameter(theParameter){ 
+  var params = window.location.search.substr(1).split('&');
+  //alert(params);
+ 
+  for (var i = 0; i < params.length; i++) {
+    var p=params[i].split('=');
+    if (p[0] == theParameter) {
+      return decodeURIComponent(p[1]);
+    }
+  }
+  return false;
+}
+        </script>
+  <!-- Begin Default Content REMOVE THIS -->
+  <h1>Congratulations</h1>
+  This is your new Page
+  <!-- End Default Content REMOVE THIS -->
+</apex:page>

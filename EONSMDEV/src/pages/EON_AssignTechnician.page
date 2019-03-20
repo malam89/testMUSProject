@@ -1,0 +1,72 @@
+<!---
+Description: 
+--->
+<!--
+Created By : Shruti Moghe
+        On : 07/09/2018
+        SR : 
+Change History :         
+
+-->
+
+<apex:page sidebar="false" showHeader="false"  id="AssignTechnician" controller="EON_Appointment_Booking_Ctrl"> 
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-1.7.2.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-ui-1.8.21.custom.min.js')}" />
+    <apex:form id="myCForm" >
+        <apex:sectionHeader title="Assign Appointment"/>
+        <apex:pageBlock id="PBC">
+            <br/>
+            
+            <apex:actionStatus id="sectionStatus">
+                <apex:facet name="start">
+                    <apex:outputPanel >
+                        Please wait cancelling the appointment...<img src="{!$Resource.EON_Busy_Status}" border="0"/>
+                    </apex:outputPanel>
+                </apex:facet>
+            </apex:actionStatus>
+            
+            <apex:pageMessages id="errMSG"></apex:pageMessages>
+            <apex:actionFunction name="AssignAppointment" status="sectionStatus" action="{!cancelAppointment}" oncomplete="onCompleteResult();" reRender="myCForm,PBC,errMSG">
+            </apex:actionFunction>
+            <br/>
+            <div>
+            <apex:pageBlockTable title="Select Appointment Reason" id="PBCTable" value="{!cancelReasons}" var="cR">
+                <apex:column headervalue="Select">                    
+                       <apex:actionsupport action="{!cancelAppointment}" event="onclick" reRender="myCForm,PBC,errMSG" oncomplete="onCompleteResult();">  
+                        <input type="radio" name="selectRadio">                    
+                            
+                            </input>
+                            <apex:param name="cancelID" value="{!cR.Id}" assignTo="{!cancelReasonID}"></apex:param>
+                        </apex:actionsupport>                            
+                </apex:column>
+                <apex:column id="cName" headerValue="Description">
+                    
+                    <apex:outputText >{!cR.Name}</apex:outputText>
+                </apex:column>
+                
+                <apex:column value="{!cR.Reason_key__c}"/>    
+            </apex:pageBlockTable>
+            </div>
+        </apex:pageBlock>
+    </apex:form>
+    <script>
+        // this javascript method will call for canceling the appointment.
+        function cancelApp(cancelId){
+            var resp = cancelAppoint(cancelId);
+        }
+        
+        function onCompleteResult() {
+            if (jQuery(".messageText").text().match("Success:Appointment has cancelled sucessfully.")) {
+                       alert('Appointment has cancelled sucessfully.');
+                       window.close();
+                }
+            //CH02
+            if (jQuery(".messageText").text().match("Success:Appointment cancelled in OptiMUS.")) {
+                       alert('Appointment cancelled in OptiMUS.');
+                       window.close();
+                }
+            return true;
+        }
+        
+    </script>
+</apex:page>

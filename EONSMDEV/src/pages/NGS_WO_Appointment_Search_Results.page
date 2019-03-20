@@ -1,0 +1,29 @@
+<!---
+    Description : This page is used to display the Appointment search results.
+--->
+<!--
+    Created By : Puneet Mehta
+    Created Date : 06/02/2017
+    Service Request : SR_OptiMUS_NG_012
+-->
+<apex:page controller="NGS_WO_Appointment_Search_Results_Ctrl" readOnly="true" action="{!displayRecord}">
+    <apex:form >
+        <apex:pageBlock id="appts" title="NGS Work order Appointment Search Results" rendered="{!IF(AppointmentResults != null && AppointmentResults.size > 0, true, false)}">
+            <apex:pageBlockTable value="{!AppointmentResults}" var="appointment">
+                <apex:column headerValue="Action">
+                    <apex:outputLink value="/{!appointment.id}"><b>Select</b> </apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="Works Order Number" value="{!appointment.name}"/>
+                <apex:column value="{!appointment.Address_Line_1__c}" HeaderValue="Address Line 1"/> 
+                <apex:column value="{!appointment.Address_Line_2__c}" HeaderValue="Address Line 2"/>
+                <apex:column value="{!appointment.City__c}" HeaderValue="City"/>
+                <apex:column value="{!appointment.Post_Code__c}" HeaderValue="PostCode"/> 
+                <apex:column value="{!appointment.Depot__c}" HeaderValue="Depot"/>    
+            </apex:pageBlockTable>
+            <apex:outputPanel style="text-align:center;horizontal-align:center;">
+                <apex:commandLink rendered="{!NOT(pageNumber == 0)}" action="{!previous}" rerender="appts">Prev</apex:commandLink>     |      <apex:commandLink rendered="{!NOT(pageNumber == noOfPages -1)}" action="{!next}" rerender="appts">Next</apex:commandLink> 
+            </apex:outputPanel>
+        </apex:pageblock>
+        <apex:pageMessage summary="No matching records found." severity="info" strength="3" rendered="{!IF(AppointmentResults == null || AppointmentResults.size == 0, true, false)}" /><apex:pageMessages />
+    </apex:form>    
+</apex:page>

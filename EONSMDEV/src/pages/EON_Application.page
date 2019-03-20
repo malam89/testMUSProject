@@ -1,0 +1,80 @@
+<!---
+    Descripiton: This page is used in commercial module and open from side bar link
+        Commercial Application.
+    Service Request : SR_Isis_EON_010    
+-->
+<!--
+    Created by : Praveen Garikipati
+    Created Date : 19-March-2016
+-->
+<apex:page controller="EON_Application_Ctrl" id="pageID">
+
+    <script>
+        document.getElementById("pageID:formID:bolckID:sectionID:ContractItem:contractlblID").focus();
+    </script>
+    <apex:pageMessages escape="false" id="msgID"/>
+    <apex:form id="formID">
+          
+        <apex:pageblock title="EON Application Management" id="bolckID">
+            <apex:pageblockSection columns="1" id="sectionID">
+                <apex:pageblockSectionItem id="ContractItem">
+                
+                    <apex:outputLabel id="contractlblID">Contract </apex:outputLabel>    
+                    <apex:outputPanel id="contractRequired" layout="block" styleClass="requiredInput">
+                        <apex:outputPanel layout="block" styleClass="requiredBlock"/>                    
+                        <apex:selectList id="contract" size="1" value="{!selectedContract}" title="contract"> 
+                            <apex:selectOptions value="{!Contracts}" rendered="true"/>
+                        </apex:selectList>
+                    </apex:outputPanel>    
+                    
+                </apex:pageblockSectionItem>
+                
+                <apex:pageblockSectionItem id="dateFromID">                
+                    <apex:outputLabel >Date From </apex:outputLabel>    
+                    <apex:inputfield value="{!application.Date_From__c}" id="dateFrom"/>                    
+                </apex:pageblockSectionItem>  
+                
+                <apex:pageblockSectionItem id="dateToID">                
+                    <apex:outputLabel >Date To</apex:outputLabel>    
+                    <apex:inputfield value="{!application.Date_To__c}" required="true" id="dateTo"/>                    
+                </apex:pageblockSectionItem>   
+                
+                <apex:commandbutton value="Calculate Value" action="{!calculateValue}" status="actStatusId" rerender="gridID, msgID"/>    
+                <apex:actionStatus id="actStatusId" >
+                    <apex:facet name="start" >
+                        Please Wait...<!-- <img src="/img/loading.gif" /> -->                     
+                    </apex:facet>
+                </apex:actionStatus> 
+                
+                <apex:panelGrid id="gridID" width="100%">
+                    <apex:outputpanel rendered="{!renderNorecordsText}" id="msgPanelID">
+                        <apex:pagemessage severity="info">   INFO: No Appointments Found</apex:pagemessage>
+                    </apex:outputpanel>
+                    <apex:outputpanel id="panelID" rendered="{!renderCalAppBtn}">
+                        <apex:pageblockSection columns="1">
+                            <apex:pageblockSectionItem id="countID" >
+                                <apex:outputLabel >Appointments</apex:outputLabel>
+                                <apex:outputText value="{!countAppointment}" />
+                            </apex:pageblockSectionItem>
+                            <apex:pageblockSectionItem id="appValueCount" >
+                                <apex:outputLabel >Appointment Values</apex:outputLabel>
+                                <apex:outputText value="{!totalAppointmentValue}" />
+                            </apex:pageblockSectionItem>                            
+                               
+                            <apex:pageblockSectionItem id="valueID">
+                                <apex:outputLabel >Value</apex:outputLabel>
+                                <apex:outputText value="{!totalValue}" />
+                            </apex:pageblockSectionItem>  
+                        </apex:pageblockSection>
+                        <apex:commandbutton value="Create Application"  action="{!createApplication}"/>  
+                    </apex:outputpanel>            
+                </apex:panelGrid>
+                                                       
+            </apex:pageblockSection>
+        </apex:pageblock>
+    </apex:form>
+    
+    <script>
+        document.getElementById("pageID:formID:bolckID:sectionID:ContractItem:contractlblID").focus();
+    </script>
+</apex:page>

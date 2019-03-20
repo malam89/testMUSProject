@@ -1,0 +1,13 @@
+<!---
+    DESCRIPTION: This page is accessed from a link in the quick launch sidebar.It allows the user to
+--->
+<!--
+    CREATED BY          : Mehboob Alam
+    CREATED DATE        : 13/05/2016
+    Service Req : 
+    Change History
+-->
+<apex:page controller="EON_Utility">
+<apex:outputLabel > Session ID----</apex:outputLabel>
+<apex:outputLabel >{!$Api.SESSION_ID}</apex:outputLabel>
+</apex:page>

@@ -1,0 +1,887 @@
+<!---
+Description : This class will allow the user to search the EON Appointment with the help of available search conditions, it will display the records from EON Appointment
+              if records are not present in EON Appointment then the conditions will search on EON Fuel object and displays the Customer name only as remainig feilds are not available for displaying. 
+              if records are not available in both reocrds then page will populate the info message stating that recordds are not available for above search.
+
+--->
+<!--
+Created By : Sivasankar K
+Created On : 16/02/2016
+Service Req: SR_EON_AB_006
+Change History :
+CH01 # SR_Isis_EON_007 # 09/03/2016 # Mahadev Joshilkar # Deleted reference of Address_Text__c.
+CH02 # SR_EON_AB_012 # 17/03/2016 # Sivasankar K # Added two new fields in search criteria, added two new section Isis and Industry default is Isis and added buttons in Isis Section.
+CH03 # SR_EON_AB_033 # 05/04/2016 # Nitin # Amended logic as per the SR, Changed field Labels, Enabled Buttons
+CH04 # SR_EON_AB_058 # 10/05/2016 # PeddaReddeiah R # Address_Text__c of value Changed(Site to S). 
+CH05 # SR_EON_AB_057 # 10/05/2016 # Nitin # Added condition to display results in RED color on the appointment Booking Portal for Portfolio Tab.
+CH06 # SR_EON_PC_051 # 16/05/2016 # Nitin # Removed Logo and Text.Added Header and other related changes.Added style class and reffered on Industry tab.
+CH07 # SR_EON_AB_067 # 14/06/2016 # Nitin # Changed Action Method for the Button on Industry Search Screen.
+CH08 # SR_EON_AB_080 # 04/07/2016 # Shruti Moghe # added error message for cancelled appointments
+CH09 # SR_EON_AB_091 # 14/07/2016 # PeddaReddeiah R # added error message for Completed appointments
+CH10 # SR_EON_AB_086 # 15/07/2016 # Praveen G #added new Appointment reason value as New_Connection for industry search.
+CH11 # SR_EON_AB_097 # 21/07/2016 # Puneet Mehta # Added notes box to the industry search appointment portal screen
+CH12 # SR_EON_AB_114 # 30/07/2016 # Purvi # added pop up to rescheduling 
+CH13 # SR_EON_AB_115 # 04/08/2016 # Dharmendra P # Added Appointment Reason field.
+CH14 # SR_EON_AB_027 # 17/08/2016 # Sivasankar K # Added the functionalilty to add to allow users book the appointment even we are not MAM.
+CH15 # SR_EON_AB_136 # 13/09/2016 # Reddeiah R # Added column in {Portfolio, Appointment Search} mus appointment booking.
+CH16 # SR_EON_AB_162 # 10/10/2016 # Puneet Mehta # Added condition for cancelled appointment
+CH17 # SR_EON_AB_202 # 20/02/2017 # Praveen G # Added logic to restric Create appointment button for portfolio search.
+CH18 # SR_EON_AB_213 # 31/03/2017 # Praveen G# added new validation rule for Reschedule button.
+CH19 # SR_EON_AB_211 # 10/04/2017 # Praveen G# added new validation rule for Reschedule / Update buttons.
+CH20 # SR_EON_AB_217 # 04/04/2017 # Mahadev J # Updated page with new fieds
+CH21 # Fixes for SR_EON_AB_217 # 27/07/2017 #Praveen 
+CH22 # SR_OptiMUS_EON_091 # 09/08/2017 # Praveen G # Reschedule functionality update.
+CH23 # SR_OptiMUS_EON_142 # 06/11/2017 # Praveen G # Reschedule functionality update.
+CH24 # SR_OptiMUS_EON_107 # 08/11/2017 # Mehboob Alam # Passing Parameters from Complaint to Appointment Booking.
+CH25 # SR_OptiMUS_EON_165 # 22/11/2017 # Mehboob Alam # Allow the creation of DF New Connections without the Effective From Date for Gas.
+CH26 # SR_OptiMUS_EON_188 # 15/01/2018 # Mehboob Alam # Retain MPAN & MPRN Value in MUS booking Page.
+CH27 # SR_OptiMUS_EON_179 # 07/02/2018 # Praveen G # Replan changes for ABORTED status.
+CH28 # SR_OptiMUS_EON_200 # 19/02/2018 # Mehboob Alam # Added a new Condition to Bypass Eligibility criteria.
+CH29 # SR_OptiMUS_EON_238 # 09/05/2018 # Mehboob Alam # Added the Alert Message for Replan Appointment.
+CH30 # SR_OptiMUS_EON_266 # 06/08/2018 # Shruti Moghe # Added ABORTED status in the logic for rescheduling the appointment.
+CH31 # SR_OptiMUS_EON_275 # 04/09/2018 # Shrinkhala   # Added ABORTED status in the logic for rejection of the appointment.
+    CH32 # SR_OptiMUS_EON_277 # 11/09/2018 # Rangnath A   # Added logic for Assign Technician functionalityCH3
+-->
+<apex:page id="appPage" sidebar="false" showHeader="true" standardStylesheets="true" controller="EON_Appointment_Booking_Ctrl" > <!-- CH06 -->
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-1.7.2.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-ui-1.8.21.custom.min.js')}" />
+    <style type="text/css"> 
+        
+        .Headercls{
+            font-family: "Times New Roman, Times, serif";
+            font-size: 30px;
+            color: #1f628d;
+            fort-weight:bold;
+            margin-left: 50px;
+        }
+        .active {
+            background-color:#1f628d;
+        }
+        .inActive {
+            background-color:#FCFCFC;
+        }
+        .fontClass{
+            padding-top: 3px;
+            padding-bottom: 3px;
+            color: #4a4a56;
+            width: 18%;
+            padding-right: 10px;
+            padding-left: 2px;
+            align: right;
+            font-size: 13px;
+            font-weight: bold;
+            font-family: Arial,Helvetica,sans-serif;
+            margin-top: 0px;
+        
+        border-collapse: separate;
+        }
+        .textCls {
+            padding-top: 0;
+            border: 1px solid #d8dde6;
+            border-radius: 1px;
+            line-height: 18px;
+            box-sizing: border-box;
+            width: 150px;
+        }
+        
+        .bPageBlock .list {
+            width: 100%;
+        }
+        
+        .bPageBlock .pbHeader table, .bPageBlock .pbBottomButtons table {
+            border-spacing: 0;
+            width: 6%;
+        }
+        .bPageBlock {
+            width: 90%;
+        }        
+        tr.border_bottom td {          <!-- CH06 -->
+            border-bottom:2pt solid #ECECEC;
+        } 
+        body input.btn {
+            color: #fff;
+            background: #1797c0;
+            border-color: #ffffff;
+            font-family: Arial,Helvetica,sans-serif;
+            letter-spacing: 0.25px;
+        }
+        .btn:hover, .btn:focus {
+            color: #fff;
+            background-color: #43bfe6;
+        } 
+        
+    </style>
+       <style type="text/css">
+        .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-color: #43bfe6;
+            border-style: solid;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: absolute;
+            /* These are the 3 css properties you will need to change so the popup 
+            displays in the center of the screen. First set the width. Then set 
+            margin-left to negative half of what the width is. You can add 
+            the height property for a fixed size pop up if you want.*/
+            width: 400px;
+            margin-left: -250px;
+            top:100px;
+        }
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }
+        div.a {
+    text-align: center;
+}
+table.a {
+    table-layout: auto;
+ width: 100%;   
+ text-align: center;
+    borde
+}
+    </style>
+    <apex:form id="appForm">
+        <!-- CH06.Start
+        <Table id="header" width="100%" > 
+            <tr >
+                <td>
+                    <apex:image id="logo" value="{!$Resource.MUSLogo}" width="200" height="40"/>
+                </td>
+                <td align="left">
+                    <apex:outputLabel id="appLabel" styleClass="Headercls" value="MUS Appointment Booking System"/>
+                </td>
+            </tr>
+        </Table>
+        CH06.End
+        -->
+        <br/><br/>
+        <div align="center" id="searchPanel" width="100%">
+            <!-- CH03.Start Added new Button : Portfolio -->
+            <apex:commandButton id="portfolio" status="sectionStatus" onclick="selSearchSection('Portfolio');" oncomplete="retainMPANMPRN('Portfolio');" style="margin-left: 5px;width:80px;" value="Portfolio" action="{!renderSections}" reRender="searchBlock,searchIsis,searchIndustry,searchResBlock,searchPortfolio">  
+                <apex:param value="portfolio" assignTo="{!callingFrom}"/>
+            </apex:commandButton>
+            <!-- CH03.End Added new Button : Portfolio -->          
+            <apex:commandButton id="isis" status="sectionStatus" style="margin-left: 10px;width:80px;" onclick="selSearchSection('Appointment');" oncomplete="retainMPANMPRN('Appointment');" value="Appointment" action="{!renderSections}" reRender="searchBlock,searchIsis,searchIndustry,searchResBlock,searchPortfolio">    <!-- CH03 Replaced Value from Isis to Appointment -->
+                <apex:param value="isis" assignTo="{!callingFrom}"/>
+            </apex:commandButton>
+            <apex:commandButton id="industry" status="sectionStatus" style="margin-left: 15px;width:80px;" onclick="selSearchSection('Industry');" oncomplete="retainMPANMPRN('Industry');" value="Industry"   action="{!renderSections}" reRender="searchBlock,searchIsis,searchIndustry,searchResBlock,searchPortfolio">
+                <apex:param value="industry" assignTo="{!callingFrom}"/>
+            </apex:commandButton>        
+            <apex:actionStatus id="sectionStatus">
+                <apex:facet name="start">
+                    <apex:outputPanel >
+                        Please wait...<img src="{!$Resource.EON_Busy_Status}" border="0"/>
+                    </apex:outputPanel>
+                </apex:facet>
+            </apex:actionStatus>    
+            <br/><br/>
+            <apex:pageBlock id="searchBlock">
+                
+                <!-- CH23 Start-->
+                <apex:actionFunction name="rescheduleAppointment1" action="{!rescheduleAppointment}" rerender="searchBlock">
+                <apex:param name="myParam" value="" />
+                </apex:actionFunction>
+                <!-- CH23 End-->
+            
+                <apex:outputPanel id="searchIsis" rendered="{!NOT(isIndustrySection) && NOT(isPortfolioSection)}"><!--CH02 render-->
+                    <Table id="searchTable" width="90%" style="background-color:#F8F8F8;">
+                        <tr>
+                            <td align="right"><apex:outputLabel id="custName" styleClass="fontClass" value="Customer Name"/></td>
+                            <td><apex:inputText styleClass="textCls" id="custVal" value="{!searchWrap.customerName}"/></td>
+                            <td align="right"><apex:outputLabel styleClass="fontClass" id="pcodes" value="Post Code"/></td>    <!-- CH03 -->
+                            <td><apex:inputText styleClass="textCls" id="pcodesVal" value="{!searchWrap.postCodeS}"/></td>
+                            <td align="right"><apex:outputLabel styleClass="fontClass" id="appID" value="Appointment ID"/></td>
+                            <td><apex:inputText styleClass="textCls" id="appIDVal" value="{!searchWrap.appointmentID}"/></td>
+                        </tr>
+                        <!--CH02.Start-->
+                        <tr>
+                            <td align="right"><apex:outputLabel styleClass="fontClass" id="mpan" value="MPAN"/></td>
+                            <td><apex:inputText styleClass="textCls" id="mpanVal" value="{!searchWrap.MPAN}"/></td>
+                            <td align="right"><apex:outputLabel styleClass="fontClass" id="mprn" value="MPRN"/></td>
+                            <td><apex:inputText styleClass="textCls" id="mprnVal" value="{!searchWrap.MPRN}"/></td>
+                        </tr>
+                        <!--CH02.End-->
+                    </Table>   
+                </apex:outputPanel>
+            
+                <!--CH02.Start-->
+                <apex:outputPanel id="searchIndustry" rendered="{!isIndustrySection}">
+                    <Table id="searchTable" width="90%" style="background-color:#F8F8F8;">
+                        <tr>
+                            <td align="right"><apex:outputLabel styleClass="fontClass" id="Impan" value="MPAN"/></td>
+                            <td><apex:inputText styleClass="textCls" id="ImpanVal" value="{!searchWrap.MPAN}"/></td>
+                            <td align="right"><apex:outputLabel styleClass="fontClass" id="Imprn" value="MPRN"/></td>
+                            <td><apex:inputText styleClass="textCls" id="ImprnVal" value="{!searchWrap.MPRN}"/></td>
+                        </tr>
+                    </Table>   
+                </apex:outputPanel>
+                <!-- CH03.Start For Portfolio-->
+                <apex:outputPanel id="searchPortfolio" rendered="{!isPortfolioSection}">
+                    <Table id="searchTable" width="90%" style="background-color:#F8F8F8;">
+                        <tr>
+                            <td align="right"><apex:outputLabel id="custNameP" styleClass="fontClass" value="Customer Name"/></td>
+                            <td><apex:inputText styleClass="textCls" id="custValP" value="{!searchWrap.customerName}"/></td>
+                            <td align="right"><apex:outputLabel styleClass="fontClass" id="accEleP" value="Account No. Elect"/></td>
+                            <td><apex:inputText styleClass="textCls" id="accEleValP" value="{!searchWrap.accountElect}"/></td>
+                            <td align="right"><apex:outputLabel styleClass="fontClass" id="accGasP" value="Account No. Gas"/></td>
+                            <td><apex:inputText styleClass="textCls" id="accGasValP" value="{!searchWrap.accountGas}"/></td>
+                        </tr>
+                        <tr>                            
+                            <td align="right"><apex:outputLabel styleClass="fontClass" id="pcodesP" value="Post Code"/></td>   
+                            <td><apex:inputText styleClass="textCls" id="pcodesValP" value="{!searchWrap.postCodeS}"/></td>                            
+                            <td align="right"><apex:outputLabel styleClass="fontClass" id="mpanP" value="MPAN"/></td>
+                            <td><apex:inputText styleClass="textCls" id="mpanValP" value="{!searchWrap.MPAN}"/></td>
+                            <td align="right"><apex:outputLabel styleClass="fontClass" id="mprnP" value="MPRN"/></td>
+                            <td><apex:inputText styleClass="textCls" id="mprnValP" value="{!searchWrap.MPRN}"/></td>
+                        </tr>                        
+                    </Table>   
+                </apex:outputPanel>
+                <!-- CH03.End For Portfolio-->
+            </apex:pageBlock>
+            <!--CH02.End-->
+            <br/>
+            <table border="0" width="40%">
+                <tr>
+                    <td width="25%" align="right">
+                        <apex:commandButton id="sBtton" status="sStatus" style="width:80px" value="Search" onclick="if(!chekPageValidations()){return false;};"  action="{!geteonAppSearchResult}" reRender="searchPanel,searchResBlock,indPanel"/>     
+                    </td>
+                    <td width="15%" align="center">
+                        <apex:actionStatus id="sStatus">
+                            <apex:facet name="start">
+                                <apex:outputPanel >
+                                    Please wait...<img src="{!$Resource.EON_Busy_Status}" border="0"/>
+                                </apex:outputPanel>
+                            </apex:facet>
+                        </apex:actionStatus>
+                    </td>
+                </tr>
+            </table>
+        </div><br/><br/>
+        <div align="center" width="60%">
+            <apex:pageBlock id="searchResBlock" title="Results" >
+                <apex:pageMessages id="MsgError"/>
+                <!--CH02.Start -->
+                
+                <apex:outputPanel id="buttonPannel" rendered="{!IF(eonAppSearchResults.size > 0,true,false)}">
+                    <!-- <apex:commandButton id="reApp" style="margin-left: 15px;" onclick="if(!isSlectedRecord('rescheduleApp')){return false;};"  value="Reschedule Appointment" action="{!rescheduleAppointment}" /> CH22.OLD--> 
+                    <apex:commandButton id="reApp" style="margin-left: 15px;" onclick="if(!isSlectedRecord('rescheduleApp')){return false;};"  value="Reschedule Appointment" />        <!-- CH22 -->
+                    <apex:commandButton id="canApp" style="margin-left: 15px;" onclick="if(!cancelAppointment()){return false;};" value="Cancel Appointment" reRender="searchResBlock" />            <!-- CH03 -->
+                    <apex:commandButton id="uApp" style="margin-left: 15px;" onclick="if(!isSlectedRecord('updateApp')){return false;};" value="Update Appointment" />   <!--     CH03 action="/apex/EON_Update_Appointment?id={!selApptID}" -->
+                    
+                    <apex:commandButton id="getTStatus" style="margin-left: 15px;" disabled="true" value="Get Technician Status" />     <!-- CH03 -->
+                    <apex:commandButton id="AssignTechnician" style="margin-left: 15px;" disabled="{!NOT(AssignInOptimus)}" rendered="{!($Profile.Name == 'System Administrator' || $Profile.Name == 'VOICE Community Plus User' || $Profile.Name == 'VOICE Community User')}" value="Assign Technician" action="{!showPopup}" rerender="AssignTechWIndow,AssignTechError"/> <!-- CH32 -->
+                    <br/>
+                </apex:outputPanel>
+                 <apex:outputPanel id="AssignTechError">
+                  <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayError}"/>
+                  <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!displayError}">
+                        <h1>Please select a Technician first then click Assign</h1> <br/><br/>                 
+                    <apex:commandButton value="Go Back" action="{!closePopup}" rerender="AssignTechWIndow,AssignTechConfirm,AssignTechError"/>  
+                    </apex:outputPanel>
+                    </apex:outputPanel> 
+                 <apex:outputPanel id="AssignTechWIndow">
+                    <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayPopUp}"/>
+                        <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!displayPopUp}">
+                        <div class="a">
+                        <h style="font-size:30px"><b><u>Assign Technician</u></b></h>
+                        <br/>
+                         <br/>                                              
+                        <br/>
+                        <table class="a" >
+                          <tr>
+                            <th style="width:30%"></th>
+                            <th style="border: 1px solid black; text-align:center"><apex:outputtext value="Appointment ID = {!ApptToassign.name}"/></th>
+                            <th style="width:30%" ></th>
+                          </tr>                     
+                         </table>
+                          <br/>                                              
+                        <br/>
+                              <apex:inputField value="{!ApptToassign.Technician__c}" html-placeholder="Select Technician" style="font-style:italic ; font-align:Center"/>                          
+                        <br/>                                              
+                        <br/>
+                        </div>
+                            <apex:commandButton value="Assign Technician" action="{!openlookup}" rerender="AssignTechWIndow,AssignTechConfirm,AssignTechError"/>                                                        
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                    <apex:outputPanel id="AssignTechConfirm">
+                    <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayPopUp1}"/>
+                        <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!displayPopUp1}">
+                        <div class="a">
+                        <h1>You are about to assign {!ApptToassign.name} to technician {!ApptToassign.Technician__r.name}</h1>
+                        <br/>                                                                               
+                        <br/>
+                        </div>
+                          <apex:commandButton value="Assign" action="{!AssignTechInOFS}" rerender="AssignTechWIndow,AssignTechConfirm"/>   
+                        <apex:commandButton value="Go Back" action="{!closePopup}" rerender="AssignTechWIndow,AssignTechConfirm"/>                                                                              
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                <br/>
+                <!--CH02.End -->
+                <apex:pageBlockTable id="searchRes" value="{!eonAppSearchResults}" var="eonResult" width="60%" rendered="{!IF(eonAppSearchResults.size > 0,true,false)}">
+                    <apex:column headerValue="Select" >
+                        <apex:actionsupport event="onclick" rerender="AssignTechnician">  
+                            <input type="radio" name="rdoSelect" id="{!eonResult.Id}"/> 
+                            <apex:param name="selApptID" value="{!eonResult.Id}" assignTo="{!selApptID}"  ></apex:param>
+                            <apex:param name="AssignInOptimus" value="{!eonResult.job_code__r.Assign_in_OptiMUS__c}" assignTo="{!AssignInOptimus}"></apex:param>
+                            
+                        </apex:actionsupport>
+                    </apex:column>
+                    <apex:column headerValue="Appointment ID" style="Background-color:{!IF(eonResult.h_CountVulnerability__c > 0, '#ECD06F', '#0fde7e')}" >    
+                        <apex:outputLink target="_blank" value="/{!eonResult.Id}">{!eonResult.Name}</apex:outputLink>
+                    </apex:column>
+                    
+                    <apex:column headerValue="Customer Name" style="Background-color:{!IF(eonResult.h_CountVulnerability__c > 0, '#ECD06F', '#0fde7e')}" >
+                        <!--CH01 Updated relation Premise__r from Premise_ID__r and Customer__r from Customer_ID__r-->
+                        <apex:outputText value="{!eonResult.Customer_Name__c}"></apex:outputText>
+                    </apex:column>
+                    
+                    <apex:column headerValue="Address" style="Background-color:{!IF(eonResult.h_CountVulnerability__c > 0, '#ECD06F', '#0fde7e')}"> 
+                        <apex:outputText value="{!IF(eonResult.MPAN__c != '',eonResult.Metering_Point_Postcode__c ,eonResult.Post_Code__c)}" ></apex:outputText>
+                    </apex:column>                  
+                    <!-- CH03.New.End -->
+                    
+                    <apex:column headerValue="Appointment Status" rendered="{!isPortfolioSection == false}" style="Background-color:{!IF(eonResult.h_CountVulnerability__c > 0, '#ECD06F', '#0fde7e')}"> 
+                        <apex:outputText >{!eonResult.Status__c}</apex:outputText>
+                    </apex:column> 
+                    <!--- CH15.start--->
+                     <apex:column headerValue="Job Code" style="Background-color:{!IF(eonResult.h_CountVulnerability__c > 0, '#ECD06F', '#0fde7e')}" >    
+                        <apex:outputLink target="_blank" value="/{!eonResult.Job_Code__r.Id}">{!eonResult.Job_Code__r.Name}</apex:outputLink>
+                    </apex:column>
+                    
+                    <!--- CH15.End--->
+                    
+                    <!-- CH03.Start Added new column : Appointment Date -->                    
+                    <apex:column headerValue="Appointment Date" rendered="{!isPortfolioSection == false}" style="Background-color:{!IF(eonResult.h_CountVulnerability__c > 0, '#ECD06F', '#0fde7e')}"> 
+                        <apex:outputText value="{0,date,dd/MM/yyyy}"> <apex:param value="{!eonResult.Appointment_Date__c}" /> </apex:outputText>
+                    </apex:column> 
+                    
+                </apex:pageBlockTable>  
+                
+                <apex:outputPanel id="portfolioSearch" rendered="{!IF(eonFuelSearchResults.size > 0,true,false)}">
+                    <apex:commandButton id="cApp" style="margin-left: 15px;" onclick="if(!isSlectedRecord('createApp')){return false;};"  value="Create Appointment"/>     <!-- CH03 action="/apex/EON_Create_Appointment_Request?fuelID={!selFuelID}"-->
+                    <br/><br/>
+                </apex:outputPanel>
+                
+                <apex:pageBlockTable id="searchFuelRes" value="{!eonFuelSearchResults}" var="eonResult" width="60%" rendered="{!IF(eonFuelSearchResults.size > 0,true,false)}">
+                    <apex:column headerValue="Select" >
+                        <apex:actionsupport event="onclick" rerender="">   
+                            <input type="radio" name="rdoSelect"  id="{!eonResult.Id}"/>                   
+                            <apex:param name="selFuelID" value="{!eonResult.Id}" assignTo="{!selFuelID}" ></apex:param>
+                        </apex:actionsupport> 
+                    </apex:column>
+                    <apex:column headerValue="Customer Name" style="Background-color:{!IF(OR(eonResult.Premise__r.Customer__r.Campaign_Flag__c == false, mapCount[eonResult.Premise__c].EON_Opt_in_Opt_Out_Preferences__r.size > 0 ),'#FF533D', IF(AND(mapCount[eonResult.Premise__c].EON_Vulnerabilities__r.size > 0,eonResult.Premise__r.Customer__r.Campaign_Flag__c),'#ECD06F',IF(AND(mapCount[eonResult.Premise__c].EON_Vulnerabilities__r.size = 0,eonResult.Premise__r.Customer__r.Campaign_Flag__c),'#0fde7e','')))}" > <!-- CH05 -->
+                        <!--CH01 Updated relation Premise__r from Premise_ID__r and Customer__r from Customer_ID__r-->
+                        <apex:outputLink target="_blank" value="/{!eonResult.Premise__r.Customer__c}">{!eonResult.Premise__r.Customer__r.Customer_Name__c}</apex:outputLink>                    
+                    </apex:column>
+                                     
+                    <apex:column headerValue="Address" style="Background-color:{!IF(OR(eonResult.Premise__r.Customer__r.Campaign_Flag__c == false, mapCount[eonResult.Premise__c].EON_Opt_in_Opt_Out_Preferences__r.size > 0 ),'#FF533D', IF(AND(mapCount[eonResult.Premise__c].EON_Vulnerabilities__r.size > 0,eonResult.Premise__r.Customer__r.Campaign_Flag__c),'#ECD06F',IF(AND(mapCount[eonResult.Premise__c].EON_Vulnerabilities__r.size = 0,eonResult.Premise__r.Customer__r.Campaign_Flag__c),'#0fde7e','')))}" > <!-- CH05 -->
+                     <!-- CH04.Start Address_Type__c of value changed(Site to S)  -->
+                        <apex:outputText >{!IF(OR(eonResult.Premise__r.Address_Type__c == 'S',eonResult.Premise__r.Address_Type__c == 's'),eonResult.Premise__r.h_FullAddress__c ,'')}</apex:outputText>
+                    <!-- CH04.End -->
+                    </apex:column> 
+                    
+                    <!--- CH15.Start --->
+                        <apex:column headerValue="Fuel Type" style="Background-color:{!IF(OR(eonResult.Premise__r.Customer__r.Campaign_Flag__c == false, mapCount[eonResult.Premise__c].EON_Opt_in_Opt_Out_Preferences__r.size > 0 ),'#FF533D', IF(AND(mapCount[eonResult.Premise__c].EON_Vulnerabilities__r.size > 0,eonResult.Premise__r.Customer__r.Campaign_Flag__c),'#ECD06F',IF(AND(mapCount[eonResult.Premise__c].EON_Vulnerabilities__r.size = 0,eonResult.Premise__r.Customer__r.Campaign_Flag__c),'#0fde7e','')))}" > <!-- CH05 -->
+                        <!--CH01 Updated relation Premise__r from Premise_ID__r and Customer__r from Customer_ID__r-->
+                        
+                        <!-- <apex:outputLink target="_blank" value="/{!eonResult.id}">{!eonResult.Fuel_type__c}</apex:outputLink>  -->  
+<apex:outputText >{!eonResult.Fuel_type__c}</apex:outputText>                       
+                    </apex:column>
+                    <!--- CH15.End ----->    
+                    
+                </apex:pageBlockTable>
+                
+                <apex:outputPanel id="indPanel" rendered="{!isIndustrySearch}">
+                    <apex:commandButton disabled="{!NOT(isIndustryCreateApp)}" rendered="{!NOT(isAppointmentCreated)}" value="Create Appointment" action="{!createAppointment}" reRender="indPanel,MsgError" oncomplete="onCompleteResult();" onclick="if(!onClickResult()){return false;};"/> <!-- CH07 CH20 CH21(added return in onclick)-->
+                    <!-- <apex:commandButton disabled="{!NOT(isAppointmentCreated)}" value="{!IF(OR(appointmentReason = '',appointmentReason = null), 'Proceed to Book Appointment / Send Appointment to OFSC', IF(ApptReason!='Emergency Call Out','Proceed to Book Appointment','Send Appointment to OFSC'))}" action="{!createApptIndus}" reRender="indPanel,MsgError"/> --><!-- CH07 -->
+                    <apex:commandButton disabled="{!NOT(isAppointmentCreated)}" value="Proceed to Book Appointment" action="{!createApptIndus}" reRender="indPanel,MsgError"/>
+                    <br/>
+                    <Table width="100%" cellspacing="8">
+                        <th colspan="2" Style="text-align: Center;background-color: darkturquoise;color: white;font-size: 20px;">Industry Data (Electricity)</th>
+                        <th Style="text-align: Center;color: white;">|</th>
+                        <th colspan="2" Style="text-align: Center;background-color: darkturquoise;color: white;font-size: 20px;">Industry Data (Gas)</th>                        
+                        <tr class="border_bottom">  <!-- CH06 -->
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="emop" value="MOP Status"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.mopStatus}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gmam" value="MAM Status"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.mamStatus}"/></td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH06 -->  
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="ecustName" value="Customer Name"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.customerName}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gcustName" value="Customer Name"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.customerName}"/></td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH19 -->
+                            <!--CH20-->   
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="eEffFrmDate" value="Effective From Date"/></td>
+                            <td style="width:25%">
+                                <apex:outputText value="{0,date,dd/MM/yyyy}" id="eFrmDate">
+                                    <apex:param value="{!industryEleData.effectiveFromDate}" />
+                                </apex:outputText>
+                            </td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gEffFrmDate" value="Effective From Date"/></td>
+                            <td style="width:25%">
+                                <apex:outputText value="{0,date,dd/MM/yyyy}" id="gFrmDate">
+                                    <apex:param value="{!industryGasData.effectiveFromDate}" />
+                                </apex:outputText>
+                            </td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH19 -->  
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="eEffToDate" value="Effective To Date"/></td>
+                            <td style="width:25%">
+                                <apex:outputText value="{0,date,dd/MM/yyyy}">
+                                    <apex:param value="{!industryEleData.effectiveToDate}" />
+                                </apex:outputText>
+                            </td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gEffToDate" value="Effective To Date"/></td>
+                            <td style="width:25%">
+                                <apex:outputText value="{0,date,dd/MM/yyyy}">
+                                    <apex:param value="{!industryGasData.effectiveToDate}" />
+                                </apex:outputText>
+                            </td>
+                            <!--CH20-->
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH06 -->   
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="eConNum" value="Contact Number"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.contactNumber}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gConNum" value="Contact Number"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.contactNumber}"/></td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH06 -->   
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="epostcode" value="Post Code"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.postCode}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gpostcode" value="Post Code"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.postCode}"/></td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH06 -->  
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="ephase" value="Phase"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.phase}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gadd" value="Address Text"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.addressText}"/></td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH06 -->  
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="emeter1" value="Metering Point Address Line1"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.meteringPointAddressLine1}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gsubbuildNN" value="Sub Building Name Number"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.SubBuildingNameNumber}"/></td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH06 -->   
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="emeter2" value="Metering Point Address Line2"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.meteringPointAddressLine2}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gbuildNN" value="BuildingNameNumber"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.BuildingNameNumber}"/></td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH06 -->  
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="emeter3" value="Metering Point Address Line3"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.meteringPointAddressLine3}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gDthrough" value="Dependent Thoroughfare"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.DependentThoroughfare}"/></td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH06 -->  
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="emeter4" value="Metering Point Address Line4"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.meteringPointAddressLine4}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gThoroughfare" value="Thoroughfare"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.Thoroughfare}"/></td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH06 -->  
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="emeter5" value="Metering Point Address Line5"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.meteringPointAddressLine5}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gDDL" value="Double Dependent Locality"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.DoubleDependentLocality}"/></td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH06 -->  
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="emeter6" value="Metering Point Address Line6"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.meteringPointAddressLine6}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gDL" value="Dependent Locality"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.SubBuildingNameNumber}"/></td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH06 -->  
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="emeter7" value="Metering Point Address Line7"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.meteringPointAddressLine7}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gpostTown" value="Post Town"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.PostTown}"/></td>
+                        </tr>
+                        <tr class="border_bottom">   <!-- CH06 --> 
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="emeter8" value="Metering Point Address Line8"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.meteringPointAddressLine8}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"><apex:outputLabel styleClass="fontClass" id="gCounty" value="County"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryGasData.County}"/></td>
+                        </tr>
+                        <tr class="border_bottom">  <!-- CH06 -->  
+                            <td align="right" style="width:24%" ><apex:outputLabel styleClass="fontClass" id="emeter9" value="Metering Point Address Line9"/></td>
+                            <td style="width:25%"><apex:outputText value="{!industryEleData.meteringPointAddressLine9}"/></td>
+                            <td align="center" style="color: darkturquoise;">|</td>
+                            <td align="right" style="width:24%"></td>
+                            <td style="width:25%"></td>
+                        </tr>
+                        <!-- CH03.Start -->        
+                        <tr></tr>
+                        <tr></tr>
+                        <tr></tr>
+                        <tr>
+                            <td align="right" style="width:25%" ><apex:outputLabel styleClass="fontClass" value="Appointment Reason" />
+                            </td>
+                            <td>
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                                <!--<apex:selectList id="appReasonList" size="1" multiselect="false" value="{!appointmentReason}" disabled="{!IF((industryEleData.mopStatus == 'InActive' || industryGasData.mamStatus == 'InActive') && NOT(areWeNotMAM),true,false)}"> <!-- CH13, CH14 --->
+                                <apex:selectList id="appReasonList" size="1" multiselect="false" value="{!appointmentReason}" disabled="{!IF(NOT(allowBooking) && NOT(areWeNotMAM),true,false)}"> <!-- CH13, CH14 --->
+                                   <!-- <apex:selectOption itemValue="" itemLabel="--None--"/>
+                                    <apex:selectOption itemValue="Maintenance" itemLabel="Maintenance"/>
+                                    <apex:selectOption itemValue="ECO" itemLabel="ECO"/>  
+                                    <apex:selectOption itemValue="New Connections" itemLabel="New_Conn"/> <!-- CH10 //CH13--> 
+                                     <apex:selectOptions value="{!appReasonLst}"/>
+                                    <apex:actionsupport event="onchange" action="{!selectedJobs}" reRender="indPanel,MsgError,op"/>
+                                </apex:selectList>
+                                </apex:outputPanel>
+                            </td>
+                        </tr>
+                        <tr></tr>                       
+                        <tr>
+                            <td align="right" style="width:25%;"><apex:outputLabel styleClass="fontClass" value="Job Codes" rendered="true" id="jobcdPolbl"/></td>                             
+                             <td>
+                                <apex:outputPanel rendered="true" id="op" styleClass="requiredInput" layout="block" > 
+                               
+                                <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                                    <!--<apex:selectList id="jobCodeLst" size="1" style="width:50%" value="{!jobCodesSearched}" multiselect="false" disabled="{!IF((industryEleData.mopStatus == 'InActive' || industryGasData.mamStatus == 'InActive') && NOT(areWeNotMAM),true,false || appointmentReason==null)}">-->
+                                    <apex:selectList id="jobCodeLst" size="1" style="width:50%" value="{!jobCodesSearched}" multiselect="false" disabled="{!IF(NOT(allowBooking) && NOT(areWeNotMAM),true,false || appointmentReason==null)}">   
+                                        <apex:selectOptions value="{!SelectedJobCodes}"/>                                   
+                                    </apex:selectList>
+                                    <apex:actionsupport event="onchange" action="{!validateIndustryCreateApp}" reRender="indPanel,MsgError"/>  
+                                   
+                                </apex:outputPanel> 
+                              
+                            </td>                         
+                        </tr>
+                        <!--CH11.START-->
+                        <tr></tr>
+                        <tr>
+                            <td align="right" style="width:25%;"><apex:outputLabel styleClass="fontClass" value="Appointment Notes" rendered="true" id="apptNotes"/></td>
+                                <td>
+                                    <apex:outputPanel rendered="true">
+                                        <apex:inputfield value="{!newAppointment.Notes__c}"></apex:inputfield>
+                                    </apex:outputPanel>
+                            </td>
+                        </tr>
+                        <!--CH11.END-->
+                    <!-- CH03.End -->
+                    </Table>     
+                </apex:outputPanel>
+            </apex:pageBlock>
+        </div>
+    </apex:form>
+    <script type="text/javascript">
+        var __sfdcSessionId = '{!GETSESSIONID()}';
+    </script>
+    <script src="../../soap/ajax/37.0/connection.js" type="text/javascript"/>     
+    <script>
+        var j$ = jQuery.noConflict();
+        
+        //This method will invoke the function that will check that search filter is populated or not.
+        function chekPageValidations() {
+            var isCheckVal = false;
+            
+            j$(":input[type=text]").each(function(){ // loop the check box where Class has checkboxCls
+                
+                if (this.value != '' ){ 
+                    isCheckVal = true;
+                }
+            });
+            if (!isCheckVal) {
+                alert('Please enter at least one search criteria. ');
+                return false;
+            } else { return true;}
+        }
+        
+        
+        //This method will checks that user has selected the record or not.
+        function isSlectedRecord(callFrom) {
+            var appID = j$("input[name='rdoSelect']:checked").attr('id');
+            console.log(' appID ='+appID+', callFrom = '+callFrom );
+            if ( typeof appID != 'undefined' ) {
+                //CH08.start
+                //CH09.start
+                var apps = sforce.connection.query("select Replan__c, h_Job_Type__c, id,Appointment_Date__c,Status__c from EON_Appointment__c where id = '"+appID+"'");//CH16
+                var records = apps.getArray("records");
+                if ( callFrom == 'updateApp' ){
+                
+                    //CH19.Start
+                    if(records[0].get("Status__c").toUpperCase()=='DRAFT'){
+                        alert('Draft appointments cannot be updated or amended');
+                        return false;
+                    }
+                    //CH19.end
+                                    
+                    //CH16.start
+                    if(records[0].get("Appointment_Date__c") != null && records[0].get("Appointment_Date__c") != ''){
+                        var tempdate = new Date(records[0].get("Appointment_Date__c"));
+                        if(tempdate < new Date('{!Today()}')){
+                            alert("Update request rejected – appointment is already cancelled in Oracle");
+                            return false;
+                        }
+                    }
+                    //CH16.end
+                    //CH09.start
+                   if(records.length > 0 && records[0].get("Status__c") !=null && !(records[0].get("Status__c").toUpperCase()=='CANCELLED' || records[0].get("Status__c").toUpperCase()=='RESCHEDULED' || records[0].get("Status__c").toUpperCase()=='COMPLETED')){//CH16
+                    window.open('/apex/EON_Update_Appointment?id='+appID,'_top');
+                   }
+                   else if( records[0].get("Status__c").toUpperCase()=='CANCELLED' || records[0].get("Status__c").toUpperCase()=='RESCHEDULED'){//CH16
+                        //alert('A cancelled appointment cannot be updated. For more information contact the MUS Back office');//CH16.OLD
+                        alert('Update request rejected – appointment is already cancelled in Oracle');//CH16.NEW
+                   }
+                   else if(records[0].get("Status__c").toUpperCase() =='COMPLETED'){
+                        alert('A completed appointment cannot be updated. For more information contact the MUS Back office');
+                   }
+                   //CH08.end
+                   //CH09.end
+                } 
+                else if ( callFrom == 'createApp' ){
+                    
+                    //CH17.Start
+                    var fuelRec = sforce.connection.query("select h_Campaign_Flag__c from EON_Fuel__c where id = '"+appID+"'");
+                    var fuelRecords = fuelRec.getArray("records"); 
+                    if(fuelRecords[0].get("h_Campaign_Flag__c") == 'true'){
+                        window.open('/apex/EON_Create_Appointment_Request?fuelID='+appID+'&source=portfolio','_top');
+                    }
+                    //CH28.Start
+                    else if('{!$Profile.Name}'=='Backoffice Standard' && '{!$User.Allow_Eligibility_Override__c}' =='true'){
+                        alert('Warning. This customer is considered as ineligible for a smart meter. Please ensure this appointment request was received via the E.ON Non-Standard appointment request process.');
+                        window.open('/apex/EON_Create_Appointment_Request?fuelID='+appID+'&source=portfolio&Eligible=true','_top');
+                      } //CH28.END
+                    else{                        
+                        alert('This Customer is not smart eligible and an appointment cannot be created at this time');
+                        return false;
+                    }                                                      
+                    //CH17.End
+                    
+                    
+                } else if ( callFrom == 'rescheduleApp') {
+                
+                    //CH19.Start
+                    if(records[0].get("Status__c").toUpperCase()=='DRAFT'){
+                        alert('Draft appointments cannot be updated or amended');
+                        return false;
+                    }
+                    //CH19.end
+                    
+                    //CH18.Start
+                    if(records.length > 0 && records[0].get("h_Job_Type__c") == 'ECO'){
+                        alert('ECO jobs cannot be rescheduled as they are fixed time and must be attended within the SLA');
+                        return false;
+                    }
+                    //CH18.End
+                    
+                    
+                    //CH08.start
+                    //CH09.start
+                        if(records.length > 0 && records[0].get("Status__c")!=null && 
+                           ((records[0].get("Status__c").toUpperCase()=='CANCELLED' 
+                              || records[0].get("Status__c").toUpperCase()=='ABORTED')//27
+                               && records[0].get("Replan__c").toUpperCase()=='Y') //CH23
+                                || 
+                                !(records[0].get("Status__c").toUpperCase()=='RESCHEDULED' || 
+                                records[0].get("Status__c").toUpperCase()=='COMPLETED')){//CH16
+                            //CH12.start                    
+                             var x;                        
+                             if(records[0].get("Replan__c")==null) //CH29                      
+                                x = confirm("The reschedule function is going to cancel this appointment, Do you want to continue?"); 
+                                 else 
+                                  x = confirm("This function will Replan the previously failed appointment. Do you want to continue?"); //CH29
+                            if(x == true){
+                                //CH23.Start
+                                var replan = '';
+                                if((records[0].get("Status__c").toUpperCase()=='CANCELLED' 
+                                    || records[0].get("Status__c").toUpperCase()=='ABORTED') //CH27
+                                    && records[0].get("Replan__c").toUpperCase()=='Y')
+                                    replan = 'yes'   
+                                //CH23.End
+                                
+                                //CH22.Start                                
+                                window.open("/apex/EON_Select_ApptCncel_Region_Reschedule?AppointmentID="+appID+"&replan="+replan,"_blank", "toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=1000,height=1000");
+                                //CH22.End
+                                return true;
+                            }
+                            //CH12.end
+                        }
+                        else if(records[0].get("Status__c").toUpperCase()=='CANCELLED' || records[0].get("Status__c").toUpperCase()=='RESCHEDULED'){//CH16
+                            //alert('A cancelled appointment cannot be rescheduled. For more information contact the MUS Back office');//CH16.OLD
+                            alert('Appointment is already cancelled');//CH16.NEW
+                        }
+                        else if(records[0].get("Status__c").toUpperCase()=='COMPLETED'){
+                        alert('A completed appointment cannot be rescheduled. For more information contact the MUS Back office');
+                        }
+                        //CH09.end              
+                }
+                return false;
+            }else { 
+                alert('Please select a record to proceed action.');
+                return false;
+            }
+        }       
+        //This method will get the confirmation form the user that to cancel the selected appointment or not.and redirect the user to another page.
+        function cancelAppointment() {
+            
+            var appID = j$("input[name='rdoSelect']:checked").attr('id');
+            
+            if ( typeof appID != 'undefined') {
+                //CH08.start
+                var apps = sforce.connection.query("select id,Status__c from EON_Appointment__c where id = '"+appID+"'");
+                var records = apps.getArray("records");
+                //CH08.start
+                if(records.length > 0 && records[0].get("Status__c")!=null && !(records[0].get("Status__c").toUpperCase()=='CANCELLED' || records[0].get("Status__c").toUpperCase()=='RESCHEDULED' || records[0].get("Status__c").toUpperCase()=='COMPLETED' || records[0].get("Status__c").toUpperCase()=='ABORTED' )){//CH16 //CH31.added aborted to status list//CH30
+                    if ( confirm("Are you sure want to cancel the appointment? ")){         
+                            window.open("/apex/EON_Select_Appointment_Cancel_Region?AppointmentID="+appID,"_blank", "toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=1000,height=1000");
+                        }
+                }
+                else if(records[0].get("Status__c").toUpperCase()=='CANCELLED' || records[0].get("Status__c").toUpperCase()=='RESCHEDULED'){//CH16
+                    //alert('This appointment is cancelled. For more information contact the MUS Back office');//CH16.OLD
+                    alert('Appointment is already cancelled');//CH16.NEW
+               }
+               else if(records[0].get("Status__c").toUpperCase()=='COMPLETED'){
+               alert('This appointment is completed, and cannot be cancelled. For more information contact the MUS Back office');
+               }
+               else if(records[0].get("Status__c").toUpperCase() =='ABORTED'){//CH31
+                        alert('REJECTED - Appointment cannot be updated due to its current status'); //CH31
+                   }//CH31
+               //CH09.start
+            } else {
+                alert('Please select appointment to cancel.');
+            } 
+            return false;
+        }
+        //CH08.start
+        // This will call the method once the document is ready to make the Appointment button color.
+        j$( document ).ready(function() {
+            selSearchSection('Appointment');
+            if({!dspIndustryBtn}) //CH26
+               selSearchSection('Industry');
+            //CH24.start
+            if(getParameter('mpan'))
+               document.getElementById('appPage:appForm:searchBlock:ImpanVal').value =getParameter('mpan');
+            if(getParameter('mprn'))
+               document.getElementById('appPage:appForm:searchBlock:ImprnVal').value =getParameter('mprn');
+           //CH24.END
+        });
+        
+        //CH24.Start
+        //This method will get the parameter from URL.
+        function getParameter(theParameter){ 
+           var params = window.location.search.substr(1).split('&');
+              for (var i = 0; i < params.length; i++) {
+                var p=params[i].split('=');
+                if (p[0] == theParameter) {
+                  return decodeURIComponent(p[1]);
+                }
+              }
+              return false;
+            }
+         //CH24.End
+         
+        //CH26.Start 
+        //This method is created to reatain MPAN & MPRN Values in All Tab
+        function retainMPANMPRN(sVal){
+            if (sVal== 'Portfolio') {
+                if(getParameter('mpan'))
+                   document.getElementById('appPage:appForm:searchBlock:mpanValP').value =getParameter('mpan');
+                if(getParameter('mprn'))
+                   document.getElementById('appPage:appForm:searchBlock:mprnValP').value =getParameter('mprn');
+            }
+            else if (sVal== 'Appointment') {
+                 if(getParameter('mpan'))
+                    document.getElementById('appPage:appForm:searchBlock:mpanVal').value =getParameter('mpan');
+                 if(getParameter('mprn'))
+                    document.getElementById('appPage:appForm:searchBlock:mprnVal').value =getParameter('mprn');
+            } 
+            else if (sVal== 'Industry') {
+                 if(getParameter('mpan'))
+                    document.getElementById('appPage:appForm:searchBlock:ImpanVal').value =getParameter('mpan');
+                 if(getParameter('mprn'))
+                    document.getElementById('appPage:appForm:searchBlock:ImprnVal').value =getParameter('mprn');
+            }
+            return true;
+        }
+        //CH26.End  
+        
+        //This method will make the button text color as blue stating that the section is selected.
+        function selSearchSection(val){
+            
+            if (val == 'Portfolio') { 
+                jQuery("input[id='appPage:appForm:isis']").css('color','');
+                jQuery("input[id='appPage:appForm:portfolio']").css('color','#322EC5');
+                jQuery("input[id='appPage:appForm:industry']").css('color','');
+            }
+            else if (val == 'Appointment') {
+                jQuery("input[id='appPage:appForm:isis']").css('color','#322EC5');
+                jQuery("input[id='appPage:appForm:portfolio']").css('color','');
+                jQuery("input[id='appPage:appForm:industry']").css('color','');
+            } 
+            else if (val == 'Industry') {
+                jQuery("input[id='appPage:appForm:isis']").css('color','');
+                jQuery("input[id='appPage:appForm:portfolio']").css('color','');
+                jQuery("input[id='appPage:appForm:industry']").css('color','#322EC5');
+            }
+            return true;
+        }
+        function onCompleteResult() {
+            if(!jQuery("input[value='Proceed to Book Appointment']").is(':disabled')){
+                jQuery("select[name='appPage:appForm:searchResBlock:appReasonList']").prop("disabled",true);
+                jQuery("select[name='appPage:appForm:searchResBlock:jobCodeLst']").prop("disabled",true);
+            }
+            return true;
+        }
+        function onClickResult(){ //CH20.New
+            var duelFuel = false;
+            var edt = document.getElementById('appPage:appForm:searchResBlock:eFrmDate').innerText;
+            var gdt = document.getElementById('appPage:appForm:searchResBlock:gFrmDate').innerText;
+            var mpan = document.getElementById('appPage:appForm:searchBlock:ImpanVal').value; 
+            var mprn = document.getElementById('appPage:appForm:searchBlock:ImprnVal').value; 
+            var jCode = document.getElementById('appPage:appForm:searchResBlock:jobCodeLst'); //CH25
+            var jCodeVal =  jCode.options[jCode.selectedIndex].text; //CH25
+            if(mpan != '' && mprn != ''){
+                if(edt == '' || (gdt == '' && jCodeVal!='OOASMARTDFINST')){
+                    alert('Can\'t book appointment as \'Effective From Date\' is blank for MPAN or MPRN'); //CH21 changed MPRN
+                    return false;
+                }
+            }
+            else if(mpan != ''){
+                if(edt == ''){
+                    alert('Can\'t book appointment as \'Effective From Date\' is blank for MPAN');
+                    return false;
+                }
+            }
+            else if(mprn != ''){
+                if(gdt == ''){
+                    alert('Can\'t book appointment as \'Effective From Date\' is blank for MPRN');
+                    return false;
+                }
+            }
+            return true;
+        }
+    </script>
+</apex:page>

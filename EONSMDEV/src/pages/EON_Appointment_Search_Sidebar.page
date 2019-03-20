@@ -1,0 +1,47 @@
+<!--- 
+    Description : This Page will be for side bar component for Appointment
+--->
+<!--
+    Created By : Praveen G
+    Created Date : 11-April-2016
+    Service Request : SR_Isis_EON_015
+-->
+<apex:page id="pageID" docType="html-5.0">
+
+    <script>
+        function redirect(){
+            var appointmentID = document.getElementById('pageID:EONAppointmentSearch:appointmentID').value;
+            var customerName = document.getElementById('pageID:EONAppointmentSearch:customerName').value;
+            var mpan = document.getElementById('pageID:EONAppointmentSearch:mpan').value;
+            var mprn = document.getElementById('pageID:EONAppointmentSearch:mprn').value;
+            
+            var url = '/apex/EON_Appointment_Search_Results?appointmentID=' +appointmentID;
+                url += '&customerName='+ customerName;
+                url += '&mpan='+ mpan; 
+                url += '&mprn='+ mprn;
+                
+            window.top.location = url;               
+        }
+        
+        window.onload = setFocus
+            function setFocus() {}         
+    </script>        
+
+    <div style="height: 0px; clear: both;"></div>
+    <apex:form id="EONAppointmentSearch" style="display: block;">
+        <apex:outputText >Appointment ID: </apex:outputText><br/>
+        <apex:inputText id="appointmentID" style="width:160px"/><br/> 
+        
+        <apex:outputText >Customer Name: </apex:outputText><br/>
+        <apex:inputText id="customerName" style="width:160px"/><br/>  
+        
+        <apex:outputText >MPAN: </apex:outputText><br/>
+        <apex:inputText id="mpan" style="width:160px"/><br/> 
+        
+        <apex:outputText >MPRN: </apex:outputText><br/>
+        <apex:inputText id="mprn" style="width:160px"/><br/> 
+        
+        <br/>
+        <input value="---Search---" type="submit" onclick="redirect();"></input>                                  
+    </apex:form>
+</apex:page>

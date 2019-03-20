@@ -1,0 +1,283 @@
+<!---
+    DESCRIPTION: This page is accessed from a the new button of EON Complaint Object.
+                 1. A New Visual Force page to Override the standard new page.
+
+--->
+<!--
+    CREATED BY   : Mehboob Alam
+    CREATED DATE : 02/10/2017
+    Service Req : SR_OptiMUS_EON_104
+    Change History
+    Change History
+    CH01 # SR_OptiMUS_EON_183 # 20/12/2017 # Mehboob Alam # Added validation for Job Type.
+-->
+<apex:page id="nPage" standardController="EON_Complaint__c" extensions="EON_Complaint_Controller">
+    <script src="/soap/ajax/30.0/connection.js" type="text/javascript"></script>
+    <script src="/soap/ajax/30.0/apex.js" type="text/javascript"></script>
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-1.7.2.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-ui-1.8.21.custom.min.js')}" />
+    <style>
+    .txtBox {
+      position: relative;
+      right: 35%;
+      font-family: Arial,Helvetica,sans-serif;
+    }
+      .reqVal{
+      border-left-style: solid;
+      border-left-width: 3px;
+      border-left-color: #c00;
+    }
+    </style>
+    <script type="text/javascript">
+     sforce.connection.sessionId = '{!$Api.Session_ID}';
+      var jobCodeMap = {};
+      //Running jQuery on Page Load
+      j$ = jQuery.noConflict();
+      j$(document).ready(function() {
+         if('{!$Profile.Name}'=='VOICE Community Plus User' || '{!$Profile.Name}'=='VOICE Community User' ){
+            document.getElementById("nPage:nForm:pBlock:pbSectionCCI:cReceivedBy").value= 'VOICE';
+            document.getElementById("nPage:nForm:pBlock:pbSectionCCI:cReceivedBy").disabled = true;
+            document.getElementById('nPage:nForm:pBlock:pbSectionCO:hComplaintReceivedBy').value='VOICE';
+            }
+            //CH01.start
+            var aID = document.getElementById('nPage:nForm:pBlock:pbSectionCI:cAppointment').value;
+            if(aID !='')
+                document.getElementById('nPage:nForm:pBlock:pbSectionCI:cJobType').className = "reqVal";
+            //CH01.End
+         pContactMethod();
+         cOutcomeMethod();
+         showHidePreComp();
+         showHideCustomer();
+         document.getElementById('nPage:nForm:pBlock:pbSectionCI:pbSecItemPre:cPComplaintLabel').style.display = "none";
+         document.getElementById('nPage:nForm:pBlock:pbSectionCI:pbSecItemPre:cPComplaint').style.display = "none";
+         document.getElementById('nPage:nForm:pBlock:pbSectionCI:pbSecItemPre:cPComplaint_lkwgt').style.display = "none";
+     });
+    
+    
+     //Function to show hide Customer Name Field on selection of Eon Customer Checkbox
+     function showHideCustomer(){
+      if(document.getElementById('nPage:nForm:pBlock:pbSectionCCI:eCustomer').checked){
+         document.getElementById('nPage:nForm:pBlock:pbSectionCCI:pbSecItem:cCustomerLabel').style.display = "block";
+         document.getElementById('nPage:nForm:pBlock:pbSectionCCI:pbSecItem:cCustomer').style.display = "block";
+         document.getElementById('nPage:nForm:pBlock:pbSectionCCI:pbSecItemR:rCustomerLabel').style.display = "block";
+         document.getElementById('nPage:nForm:pBlock:pbSectionCCI:pbSecItemR:rCustomer').style.display = "block";  
+         } 
+         else{
+           document.getElementById('nPage:nForm:pBlock:pbSectionCCI:pbSecItem:cCustomerLabel').style.display = "none";
+           document.getElementById('nPage:nForm:pBlock:pbSectionCCI:pbSecItem:cCustomer').style.display = "none";
+           document.getElementById('nPage:nForm:pBlock:pbSectionCCI:pbSecItemR:rCustomerLabel').style.display = "none";
+           document.getElementById('nPage:nForm:pBlock:pbSectionCCI:pbSecItemR:rCustomer').style.display = "none";
+           }
+     }
+     
+      //Function to make field mandatory as per selection of Preferred Contact Method
+      function pContactMethod(){
+       pconVal = document.getElementById('nPage:nForm:pBlock:pbSectionCCI:pContactMethod').value;
+       if(pconVal=='Email'){
+          document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cEmail').className = "reqVal";
+          document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cTelePhone').className = "";
+          document.getElementById('nPage:nForm:pBlock:pbSectionCCI:sAddress').className = "";
+          document.getElementById('nPage:nForm:pBlock:pbSectionCCI:sCity').className = "";
+          document.getElementById('nPage:nForm:pBlock:pbSectionCCI:sPostCode').className = "";
+          document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cAddress').className = "";
+          document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cCity').className = "";
+          document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cPostCode').className = "";
+          }
+          else if(pconVal=='Telephone'){
+               document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cTelePhone').className = "reqVal";
+               document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cEmail').className = "";
+               document.getElementById('nPage:nForm:pBlock:pbSectionCCI:sAddress').className = "";
+               document.getElementById('nPage:nForm:pBlock:pbSectionCCI:sCity').className = "";
+               document.getElementById('nPage:nForm:pBlock:pbSectionCCI:sPostCode').className = "";
+               document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cAddress').className = "";
+               document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cCity').className = "";
+               document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cPostCode').className = "";
+               }
+               else if(pconVal=='Letter to Site Address'){
+                    document.getElementById('nPage:nForm:pBlock:pbSectionCCI:sAddress').className = "reqVal";
+                    document.getElementById('nPage:nForm:pBlock:pbSectionCCI:sCity').className = "reqVal";
+                    document.getElementById('nPage:nForm:pBlock:pbSectionCCI:sPostCode').className = "reqVal";
+                    document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cTelePhone').className = "";
+                    document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cEmail').className = "";
+                    document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cAddress').className = "";
+                    document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cCity').className = "";
+                    document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cPostCode').className = "";
+                    }
+                    else if(pconVal=='Letter to Correspondence Address'){
+                         document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cAddress').className = "reqVal";
+                         document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cCity').className = "reqVal";
+                         document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cPostCode').className = "reqVal";
+                         document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cTelePhone').className = "";
+                         document.getElementById('nPage:nForm:pBlock:pbSectionCCI:cEmail').className = "";
+                         document.getElementById('nPage:nForm:pBlock:pbSectionCCI:sAddress').className = "";
+                         document.getElementById('nPage:nForm:pBlock:pbSectionCCI:sCity').className = "";
+                         document.getElementById('nPage:nForm:pBlock:pbSectionCCI:sPostCode').className = "";
+                         }
+      }
+     
+     
+         //Function to show hide previous complaint once repeat complaint is ticked
+         function showHidePreComp(){
+          if(document.getElementById('nPage:nForm:pBlock:pbSectionCI:cRComplaint').checked){
+             document.getElementById('nPage:nForm:pBlock:pbSectionCI:pbSecItemPre').style.display = "block";
+             document.getElementById('nPage:nForm:pBlock:pbSectionCI:cPComplaint').className = "reqVal";
+             } 
+             else{
+               document.getElementById('nPage:nForm:pBlock:pbSectionCI:pbSecItemPre').style.display = "none";
+               document.getElementById('nPage:nForm:pBlock:pbSectionCI:cPComplaint').value =''; 
+               }             
+         }
+     
+     
+     
+      //Function to Populate Appointment Details
+      function popAppDetails(){
+       var appID = document.getElementById('nPage:nForm:pBlock:pbSectionCI:cAppointment').value;
+       if(appID!=''){
+         var result = sforce.connection.query("Select Id,MPAN__c,MPRN__c,Technician__r.Name,h_Job_Type__c from EON_Appointment__c where Name ='"+appID+"' limit 1");
+         records = result.getArray('records');
+         document.getElementById('nPage:nForm:pBlock:pbSectionCI:cMPAN').value ='';
+         document.getElementById('nPage:nForm:pBlock:pbSectionCI:cMPRN').value ='';
+         document.getElementById('nPage:nForm:pBlock:pbSectionCI:cTechnician').value ='';
+         document.getElementById('nPage:nForm:pBlock:pbSectionCI:cJobType').value ='';
+         document.getElementById('nPage:nForm:pBlock:pbSectionCI:cMPAN').value=records[0].MPAN__c;
+         document.getElementById('nPage:nForm:pBlock:pbSectionCI:cMPRN').value=records[0].MPRN__c;
+         document.getElementById('nPage:nForm:pBlock:pbSectionCO:hMPAN').value=records[0].MPAN__c;
+         document.getElementById('nPage:nForm:pBlock:pbSectionCO:hMPRN').value=records[0].MPRN__c;
+         document.getElementById('nPage:nForm:pBlock:pbSectionCI:cTechnician').value =records[0].Technician__r.Name;
+         document.getElementById('nPage:nForm:pBlock:pbSectionCI:cJobType').value =records[0].h_Job_Type__c;
+         document.getElementById('nPage:nForm:pBlock:pbSectionCI:cJobType').className = "reqVal";
+       }
+     }
+     
+      //Function to make field mandatory as per selection of Complaint Outcome
+      function cOutcomeMethod(){
+       cOutVal = document.getElementById('nPage:nForm:pBlock:pbSectionCO:cOutcome').value;
+       if(cOutVal=='Disputed'){
+          document.getElementById('nPage:nForm:pBlock:pbSectionCO:cDReason').className = "reqVal";
+          document.getElementById('nPage:nForm:pBlock:pbSectionCO:cRDescription').className = "";
+          }
+          else if(cOutVal=='Resolved'){
+               document.getElementById('nPage:nForm:pBlock:pbSectionCO:cRDescription').className = "reqVal";
+               document.getElementById('nPage:nForm:pBlock:pbSectionCO:cDReason').className = "";
+               }
+               else if(cOutVal==''){
+                   document.getElementById('nPage:nForm:pBlock:pbSectionCO:cRDescription').className = "";
+                   document.getElementById('nPage:nForm:pBlock:pbSectionCO:cDReason').className = "";
+               }
+              
+      }
+
+    </script>
+    <apex:form id="nForm">
+    <apex:sectionHeader id="nHeader" title="EON Complaint Edit" subtitle="New EON Complaint" rendered="{!IF(EON_Complaint__c.Name==null,true,false)}"/>
+    <apex:sectionHeader id="nEHeader" title="EON Complaint Edit" subtitle="{!EON_Complaint__c.Name}" rendered="{!IF(EON_Complaint__c.Name!=null,true,false)}"/>
+        <apex:pageBlock id="pBlock" title="EON Complaint Edit">
+         <apex:messages id="msg" style="color:red"/>
+            <!-- New Page Block Section for Complaint Contact Information-->
+            <apex:pageBlockSection id="pbSectionCCI" title="Complainant Contact Information" collapsible="false">
+                <apex:inputField id="cName" value="{!EON_Complaint__c.Complainant_Name__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cNameR" value="{!EON_Complaint__c.Complainant_Name__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="sAddress" value="{!EON_Complaint__c.Site_Address__c}" rendered="{!NOT(dspVoice)}"/> 
+                <apex:outputField id="sAddressR" value="{!EON_Complaint__c.Site_Address__c}" rendered="{!dspVoice}"/> 
+                <apex:inputField id="eCustomer" value="{!EON_Complaint__c.EON_Customer__c}" onclick="showHideCustomer()" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="eCustomerR" value="{!EON_Complaint__c.EON_Customer__c}" rendered="{!dspVoice}"/>                 
+                <apex:inputField id="sCity" value="{!EON_Complaint__c.Site_City__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="sCityR" value="{!EON_Complaint__c.Site_City__c}" rendered="{!dspVoice}"/>
+                <apex:pageBlockSectionItem id="pbSecItem" rendered="{!NOT(dspVoice)}">
+                    <apex:outputLabel id="cCustomerLabel" value="{!$ObjectType.EON_Complaint__c.fields.Customer_Name__c.label}"/>
+                    <apex:inputField id="cCustomer" value="{!EON_Complaint__c.Customer_Name__c}" styleClass="reqVal"/>
+                </apex:pageBlockSectionItem>
+                <apex:outputField id="cCustomerR" value="{!EON_Complaint__c.Customer_Name__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="sPostCode" value="{!EON_Complaint__c.Site_Postcode__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="sPostCodeR" value="{!EON_Complaint__c.Site_Postcode__c}" rendered="{!dspVoice}"/>
+                <apex:pageBlockSectionItem id="pbSecItemR" rendered="{!NOT(dspVoice)}">
+                    <apex:outputLabel id="rCustomerLabel" value="{!$ObjectType.EON_Complaint__c.fields.Relationship_to_Customer__c.label}"/>
+                    <apex:inputField id="rCustomer" value="{!EON_Complaint__c.Relationship_to_Customer__c}" styleClass="reqVal"/>
+                </apex:pageBlockSectionItem>
+                <apex:outputField id="rCustomerR" value="{!EON_Complaint__c.Relationship_to_Customer__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cAddress" value="{!EON_Complaint__c.Correspondence_Address__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cAddressR" value="{!EON_Complaint__c.Correspondence_Address__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="pContactMethod" value="{!EON_Complaint__c.Preferred_Contact_Method__c}" required="true" onchange="pContactMethod()" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="pContactMethodR" value="{!EON_Complaint__c.Preferred_Contact_Method__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cCity" value="{!EON_Complaint__c.Correspondence_City__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cCityR" value="{!EON_Complaint__c.Correspondence_City__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cEmail" value="{!EON_Complaint__c.Email__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cEmailR" value="{!EON_Complaint__c.Email__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cPostCode" value="{!EON_Complaint__c.Correspondence_Postcode__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cPostCodeR" value="{!EON_Complaint__c.Correspondence_Postcode__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cTelePhone" value="{!EON_Complaint__c.Telephone__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cTelePhoneR" value="{!EON_Complaint__c.Telephone__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cReceivedBy" value="{!EON_Complaint__c.Complaint_Received_By__c}" rendered="{!IF(OR($Profile.Name='VOICE Community Plus User',$Profile.Name='VOICE Community User'),true,false)}"/>
+                <apex:inputField id="cEditReceivedBy" value="{!EON_Complaint__c.Complaint_Received_By__c}" rendered="{!IF(AND($Profile.Name!='VOICE Community Plus User',$Profile.Name!='VOICE Community User'),true,false)}" required="true"/>
+                <apex:pageBlockSectionItem > <!-- Blank Space--> </apex:pageBlockSectionItem>
+                <apex:inputField id="cSAName" value="{!EON_Complaint__c.Customer_Service_Advisor_Name__c}" rendered="{!IF(EON_Complaint__c.Name==null,true,false)}"/>
+                <apex:InputText id="cNSAName" value="{!EON_Complaint__c.Customer_Service_Advisor_Name__c}" disabled="true" rendered="{!IF(EON_Complaint__c.Name!=null,true,false)}"/>
+            </apex:pageBlockSection>
+            
+            <!-- New Section for Complaint Information-->
+            <apex:pageBlockSection id="pbSectionCI" title="Complaint Information" collapsible="false">
+                <apex:inputField id="cRComplaint" value="{!EON_Complaint__c.Repeat_Complaint__c}" onclick="showHidePreComp()" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cRComplaintR" value="{!EON_Complaint__c.Repeat_Complaint__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cStatus" value="{!EON_Complaint__c.Complaint_Status__c}"/>
+                <apex:outputPanel id="pbSecItemPre" style="position: relative;left:12.5%;" rendered="{!NOT(dspVoice)}">
+                    <apex:outputLabel id="cPComplaintLabel" value="{!$ObjectType.EON_Complaint__c.fields.Previous_Complaint_ID__c.label}" Styleclass="labelCol"/>
+                    <apex:inputField id="cPComplaint" value="{!EON_Complaint__c.Previous_Complaint_ID__c}"/>
+                </apex:outputPanel>
+                <apex:outputField id="cPComplaintR" value="{!EON_Complaint__c.Previous_Complaint_ID__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cStatusTime" value="{!EON_Complaint__c.Status_Update_Time__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cStatusTimeR" value="{!EON_Complaint__c.Status_Update_Time__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cAppointment" value="{!EON_Complaint__c.Appointment_ID__c}" onchange="popAppDetails()" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cAppointmentR" value="{!EON_Complaint__c.Appointment_ID__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cAllocatedTo" value="{!EON_Complaint__c.Allocated_To_1__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cAllocatedToR" value="{!EON_Complaint__c.Allocated_To_1__c}" rendered="{!dspVoice}"/>
+                <apex:inputText id="cMPAN" value="{!EON_Complaint__c.MPAN__c}" disabled="true"/>
+                <apex:panelGrid id="cPanel" columns="2" styleClass="txtBox">
+                    <apex:outputLabel id="cMPRNLabel" value="{!$ObjectType.EON_Complaint__c.fields.MPRN__c.label}" Styleclass="labelCol" />
+                    <apex:inputText id="cMPRN" value="{!EON_Complaint__c.MPRN__c}" disabled="true" />
+                </apex:panelGrid>
+                <apex:inputField id="cTechnician" value="{!EON_Complaint__c.Technician__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cTechnicianR" value="{!EON_Complaint__c.Technician__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cDateAllocated" value="{!EON_Complaint__c.Date_Allocated__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cDateAllocatedR" value="{!EON_Complaint__c.Date_Allocated__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cJobType" value="{!EON_Complaint__c.Job_Type__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cJobTypeR" value="{!EON_Complaint__c.Job_Type__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cDateReceived" value="{!EON_Complaint__c.Date_Complaint_Received__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cDateReceivedR" value="{!EON_Complaint__c.Date_Complaint_Received__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cComplaintType" value="{!EON_Complaint__c.Complaint_Type__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cComplaintTypeR" value="{!EON_Complaint__c.Complaint_Type__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cComplaintLogged" value="{!EON_Complaint__c.Date_Complaint_Logged__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cComplaintLoggedR" value="{!EON_Complaint__c.Date_Complaint_Logged__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cComplaintDesc" value="{!EON_Complaint__c.Complaint_Description__c}" required="true" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cComplaintDescR" value="{!EON_Complaint__c.Complaint_Description__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cInvNotes" value="{!EON_Complaint__c.Investigation_Notes__c}"/>
+                <apex:inputField id="cCategoryLevel1" value="{!EON_Complaint__c.Complaint_Category_Level_1__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cCategoryLevel1R" value="{!EON_Complaint__c.Complaint_Category_Level_1__c}" rendered="{!dspVoice}"/>
+                <apex:pageBlockSectionItem > <!-- Blank Space--> </apex:pageBlockSectionItem>
+                <apex:inputField id="cCategoryLevel2" value="{!EON_Complaint__c.Complaint_Category_Level_2__c}" required="true" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cCategoryLevel2R" value="{!EON_Complaint__c.Complaint_Category_Level_2__c}" rendered="{!dspVoice}"/>
+            </apex:pageBlockSection>
+            
+            <!-- New Page Block Section for Complaint Outcome-->
+            <apex:pageBlockSection id="pbSectionCO" title="Complaint Outcome" collapsible="false">
+                <apex:inputField id="cOutcome" value="{!EON_Complaint__c.Complaint_Outcome__c}" onchange="cOutcomeMethod()"/>
+                <apex:inputField id="cAmount" value="{!EON_Complaint__c.Compensation_Amount__c}" rendered="{!NOT(dspVoice)}"/>
+                <apex:outputField id="cAmountR" value="{!EON_Complaint__c.Compensation_Amount__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cDReason" value="{!EON_Complaint__c.Dispute_Reason__c}" rendered="{!NOT(dspVoice)}" />
+                <apex:outputField id="cDReasonR" value="{!EON_Complaint__c.Dispute_Reason__c}" rendered="{!dspVoice}"/>
+                <apex:inputField id="cComplaintResolved" value="{!EON_Complaint__c.Date_Complaint_Resolved__c}"/>
+                <apex:inputField id="cRDescription" value="{!EON_Complaint__c.Resolution_Description__c}" />
+                <apex:panelGrid id="hPanel" columns="5">
+                    <apex:inputHidden id="hMPAN" value="{!EON_Complaint__c.MPAN__c}"/>
+                    <apex:inputHidden id="hMPRN" value="{!EON_Complaint__c.MPRN__c}"/>
+                    <apex:inputHidden id="hComplaintReceivedBy" value="{!EON_Complaint__c.Complaint_Received_By__c}" rendered="{!IF(OR($Profile.Name='Voice Community Plus User',$Profile.Name='Voice Community User'),true,false)}"/>
+                </apex:panelGrid>
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons id="pbBtnSec" location="Bottom" >
+                <apex:commandButton id="sBtn" value="Save" action="{!Save}" />
+                <apex:commandButton id="snBtn" value="Save & New" action="{!saveNew}" />
+                <apex:commandButton id="cBtn" value="Cancel" action="{!cancel}" />
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

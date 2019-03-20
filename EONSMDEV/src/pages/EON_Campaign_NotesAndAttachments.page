@@ -1,0 +1,34 @@
+<!---
+Description: This page will help to add the Notes and Attachments in related list of Eon Campaign record.
+And it will restrict the user to allow adding the only one attachment manually. The New Attachment button will not be visible once it has one attachment.
+--->
+<!--
+Created By : Sivasankar K
+        On : 21-06-2016
+        SR : SR_EON_PC_067
+Change History:
+-->
+<apex:page id="attPage" standardController="EON_Campaign__c" sidebar="true" showHeader="true">
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-1.7.2.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-ui-1.8.21.custom.min.js')}" />
+    <apex:includeScript value="/soap/ajax/30.0/connection.js"/>
+    <apex:includeScript value="/soap/ajax/30.0/apex.js"/>
+    <apex:detail relatedList="false" inlineEdit="true"/>
+    <apex:relatedList subject="{!EON_Campaign__c.id}" list="CombinedAttachments" />
+    <script>
+        var j$ = jQuery.noConflict();
+        var idArray = '{!EON_Campaign__c.id}';
+        sforce.connection.sessionId = '{!$Api.Session_ID}'; // assign the session ID
+        //Query the records
+        var result = sforce.connection.query("SELECT ID FROM Attachment WHERE ParentID =\'"+idArray+"\'");
+        //get array of records
+        var records = result.getArray("records");
+        //get the length of records
+        var lenRecords = records.length;
+        
+        j$("input[name='viewAll']").hide();
+        // compare the length and if atleast one attachment then hide the Add Attachment button
+        if ( lenRecords > 0 )
+            j$("input[name='attachFile']").hide();
+    </script>
+</apex:page>

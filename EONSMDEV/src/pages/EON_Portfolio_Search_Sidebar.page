@@ -1,0 +1,81 @@
+<!--- 
+    Description : This Page will be for side bar component for Portfolio
+--->
+<!--
+    Created By : Praveen G
+    Created Date : 09-April-2016
+    Service Request : SR_Isis_EON_015
+    Change History:
+-->
+<apex:page id="pageID" docType="html-5.0">
+    <script>
+        function redirect(){
+            var customerID = document.getElementById('pageID:EONPortfolioSearch:customerID').value;
+            var customerName = document.getElementById('pageID:EONPortfolioSearch:customerName').value;
+            var street = document.getElementById('pageID:EONPortfolioSearch:street').value;
+            var town = document.getElementById('pageID:EONPortfolioSearch:town').value;
+            //var street = ''; var town = '';
+            var postcode = document.getElementById('pageID:EONPortfolioSearch:postcode').value;
+            var elecAcct = document.getElementById('pageID:EONPortfolioSearch:elecAcct').value;
+            var elecSN = document.getElementById('pageID:EONPortfolioSearch:elecSN').value;
+            var mpan = document.getElementById('pageID:EONPortfolioSearch:mpan').value;
+            var gasAcct = document.getElementById('pageID:EONPortfolioSearch:gasAcct').value;
+            var gasSN = document.getElementById('pageID:EONPortfolioSearch:gasSN').value;
+            var mprn = document.getElementById('pageID:EONPortfolioSearch:mprn').value;
+
+            var url = '/apex/EON_Portfolio_Search_Results?customerID=' +customerID;
+                url += '&customerName='+ customerName;          
+                url += '&street='+ street;
+                url += '&town='+ town;
+                url += '&postcode='+ postcode;
+                url += '&elecAcct='+ elecAcct;
+                url += '&elecSN='+ elecSN;
+                url += '&mpan='+ mpan;
+                url += '&gasAcct='+ gasAcct;
+                url += '&gasSN='+ gasSN;
+                url += '&mprn='+ mprn;
+  
+            window.top.location = url;                           
+        }
+        window.onload = setFocus
+            function setFocus() {}        
+    </script>
+    <div style="height: 0px; clear: both;"></div>
+    <apex:form id="EONPortfolioSearch" style="display: block;" >
+        <apex:outputText >Customer ID: </apex:outputText><br/>
+        <apex:inputText id="customerID" style="width:160px"/><br/>
+        
+        <apex:outputText >Customer Name: </apex:outputText><br/>
+        <apex:inputText id="customerName" style="width:160px"/><br/> 
+
+        <apex:outputText >Street: </apex:outputText><br/>
+        <apex:inputText id="street" style="width:160px"/><br/>
+        
+        <apex:outputText >Town: </apex:outputText><br/>
+        <apex:inputText id="town" style="width:160px"/><br/>    
+
+        <apex:outputText >Postcode: </apex:outputText><br/>
+        <apex:inputText id="postcode" style="width:160px"/><br/>   
+        
+        <apex:outputText >Elec Acct: </apex:outputText><br/>
+        <apex:inputText id="elecAcct" style="width:160px"/><br/>
+        
+        <apex:outputText >Elec SN: </apex:outputText><br/>
+        <apex:inputText id="elecSN" style="width:160px"/><br/> 
+        
+        <apex:outputText >MPAN: </apex:outputText><br/>
+        <apex:inputText id="mpan" style="width:160px"/><br/>  
+        
+        <apex:outputText >Gas Acct: </apex:outputText><br/>
+        <apex:inputText id="gasAcct" style="width:160px"/><br/> 
+        
+        <apex:outputText >Gas SN: </apex:outputText><br/>
+        <apex:inputText id="gasSN" style="width:160px"/><br/> 
+        
+        <apex:outputText >MPRN: </apex:outputText><br/>
+        <apex:inputText id="mprn" style="width:160px"/><br/>  
+        
+        <br/>
+        <input value="---Search---" type="submit" onclick="redirect();"></input>                                                                        
+    </apex:form>
+</apex:page>

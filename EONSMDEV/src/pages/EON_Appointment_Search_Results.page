@@ -1,0 +1,26 @@
+<!---
+    Description : This page is used to display the Appointment search results.
+--->
+<!--
+    Created By : Praveen G
+    Created Date : 11-April-2016
+    Service Request : SR_Isis_EON_015
+-->
+<apex:page controller="EON_Appointment_Search_Results_Ctrl" readOnly="true" action="{!displayRecord}">
+    <apex:form >
+        <apex:pageBlock title="Appointment Search Results">
+            <apex:pageBlockTable value="{!AppointmentResults}" var="appointment">
+                <apex:column headerValue="EON Appointment ID">
+                    <apex:outputLink value="/{!appointment.id}"><b>{!appointment.name}</b> </apex:outputLink>
+                </apex:column>  
+                
+                <apex:column value="{!appointment.Customer_Name__c}" HeaderValue="Customer Name"/> 
+                <apex:column value="{!appointment.MPAN__c}" HeaderValue="MPAN"/>
+                <apex:column value="{!appointment.MPRN__c}" HeaderValue="MPRN"/>
+                <apex:column value="{!appointment.Appointment_Date__c}" HeaderValue="Appointment Date"/> 
+                <apex:column value="{!appointment.Status__c}" HeaderValue="Status"/>  
+                <apex:column value="{!appointment.Technician__r.Name}" HeaderValue="Technician"/>      
+            </apex:pageBlockTable>
+        </apex:pageblock>
+    </apex:form>    
+</apex:page>

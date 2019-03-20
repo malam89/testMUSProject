@@ -1,0 +1,62 @@
+<!---
+    Description : This page display list of permission exported in xls format.
+--->
+<!--
+    Created By  : Puneet Mehta
+    Created On  : 28/10/2014
+    Service Req : SR_ISIS_Central_518
+    Change History
+    #CH01 #Shraddha #07-01-2015 #SR_ISIS_Central_522 #added the column "Number of active users" per profile to this page which is exported via export button.
+-->
+<apex:page id="myPage" controller="Manage_Profile_Permissions" readOnly="true" contenttype="application/x-excel#{!filename}.xls">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+</head>
+    <style>
+        .txtAlign{  text-align:center;   }
+        body .pbBody table.list tr.dataRow th, body .pbBody table.list tr.dataRow td {
+          border-width: 1px;
+          vertical-align: middle;
+        }
+    </style>
+    <apex:form id="form" >
+    <apex:pageBlock id="pgBlock">
+        <apex:pageBlockSection columns="1" id="pbSection" >
+            <!-- Section for selecting object and profile -->
+            <!-- to display the results -->
+            <apex:pageBlockTable columnClasses=",txtAlign,txtAlign,txtAlign,txtAlign,txtAlign,txtAlign,txtAlign" style="width:100%;" headerClass="txtAlign" columnsWidth="20%,20%,10%,10%,10%,10%,10%,10%" id="permissionTable" value="{!Permissions}" var="permission" border="1">
+                <apex:column headerValue="Profile" value="{!permission.con.parent.ProfileId}"/>
+                <apex:column headerValue="Object" value="{!permission.con.SobjectType}"/>
+                <apex:column headerValue="Read" >
+                    <apex:outputText rendered="{!permission.con.PermissionsRead}">Y</apex:outputText>
+                    <apex:outputText rendered="{!!permission.con.PermissionsRead}"></apex:outputText>
+                </apex:column>
+                <apex:column headerValue="Create">
+                    <apex:outputText rendered="{!permission.con.PermissionsCreate}">Y</apex:outputText>
+                    <apex:outputText rendered="{!!permission.con.PermissionsCreate}"></apex:outputText>
+                </apex:column>
+                <apex:column headerValue="Edit">
+                    <apex:outputText rendered="{!permission.con.PermissionsEdit}">Y</apex:outputText>
+                    <apex:outputText rendered="{!!permission.con.PermissionsEdit}"></apex:outputText>
+                </apex:column>
+                <apex:column headerValue="Delete">
+                    <apex:outputText rendered="{!permission.con.PermissionsDelete}">Y</apex:outputText>
+                    <apex:outputText rendered="{!!permission.con.PermissionsDelete}"></apex:outputText>
+                </apex:column>
+                <apex:column headerValue="View All">
+                    <apex:outputText rendered="{!permission.con.PermissionsViewAllRecords}">Y</apex:outputText>
+                    <apex:outputText rendered="{!!permission.con.PermissionsViewAllRecords}"></apex:outputText>
+                </apex:column>
+                <apex:column headerValue="Modify All">
+                    <apex:outputText rendered="{!permission.con.PermissionsModifyAllRecords}">Y</apex:outputText>
+                    <apex:outputText rendered="{!!permission.con.PermissionsModifyAllRecords}"></apex:outputText>
+                </apex:column>
+                <!--CH01.Start-->
+                <apex:column headerValue="No of Active Users">
+                    <apex:outputText >{!permission.ActiveUserCount}</apex:outputText>
+                </apex:column>
+                <!--CH01.end-->
+            </apex:pageBlockTable>
+        </apex:pageblockSection>
+    </apex:pageBlock></apex:form>
+</apex:page>

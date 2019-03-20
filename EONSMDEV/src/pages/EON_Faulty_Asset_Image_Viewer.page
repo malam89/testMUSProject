@@ -1,0 +1,25 @@
+<!--
+    Description : This page will be inline page at standard page layouts for 'EON Faulty Asset' to display images from attachments
+-->
+<!--
+Created By : Mahadev Joshilkar
+Created On : 08/04/2016
+Service Req: SR_EON_Mobile_009
+Change History :
+-->
+<apex:page standardController="EON_Faulty_Asset__c" extensions="EON_Image_Viewer" showHeader="false" sidebar="false" >
+    <apex:panelGrid columns="1" cellspacing="5" width="100%">
+        <apex:repeat value="{!imageAttachments}" var="image" >
+            <apex:outputLink style="border-width:1px;" target="_newtab" value="{!image.url}">
+                <apex:image style="border-width:1px;" rendered="{!image.type=='IMG'}" url="{!image.url}" alt="{!image.Name}" title="{!image.Name} Added on - {!image.attachedOn}" height="170px" width="170px"></apex:image>               
+            </apex:outputLink>
+            &nbsp;&nbsp;&nbsp;  
+         </apex:repeat>
+    </apex:panelGrid>
+    <!-- to display message in case no image attachments are found-->
+    <apex:panelGrid width="100%" columns="1" style="text-align:center;font-family:Arial;font-size:18px;font-style:bold;" rendered="{!imageAttachments.size == 0}">
+        <br></br>
+        <br></br>
+        <apex:outputLabel >No Image Attachments found.</apex:outputLabel>
+    </apex:panelGrid>
+</apex:page>

@@ -1,0 +1,32 @@
+<!---
+    Description : This page is used to display the portfolio search results.
+--->
+<!--
+    Created By : Praveen G
+    Created Date : 11-April-2016
+    Service Request : SR_Isis_EON_015
+-->
+<apex:page controller="EON_Portfolio_Search_Results_Ctrl" readOnly="true" action="{!displayRecord}">
+    <apex:form >
+        <apex:pageBlock title="Portfolio Search Results">
+            <apex:pageBlockTable value="{!PortfolioResults}" var="portfolio">
+            
+                <apex:column headerValue="Customer">
+                    <apex:outputLink value="/{!portfolio.customerRecordID}"><b>{!portfolio.customer}</b> </apex:outputLink>
+                </apex:column>  
+              
+                <apex:column value="{!portfolio.customerName}" HeaderValue="Customer Name"/> 
+                <apex:column value="{!portfolio.campaignFlag}" HeaderValue="Campaign Flag"/>
+                <apex:column value="{!portfolio.customerGroup}" HeaderValue="Customer Group"/>
+                <apex:column value="{!portfolio.buildingNumber}" HeaderValue="Building Number"/> 
+                <apex:column value="{!portfolio.buildingName}" HeaderValue="Building Name"/>  
+                <apex:column value="{!portfolio.thorofare}" HeaderValue="Thorofare"/> 
+                <apex:column value="{!portfolio.town}" HeaderValue="Town"/> 
+                <apex:column value="{!portfolio.postcode}" HeaderValue="Postcode"/>
+                <apex:column value="{!portfolio.addressType}" HeaderValue="AddressType"/> 
+                <apex:column value="{!portfolio.mpan}" HeaderValue="mpan"/> 
+                <apex:column value="{!portfolio.mprn}" HeaderValue="mprn"/>      
+            </apex:pageBlockTable>
+        </apex:pageblock>
+    </apex:form>
+</apex:page>

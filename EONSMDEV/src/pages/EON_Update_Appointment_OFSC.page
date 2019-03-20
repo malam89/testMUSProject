@@ -1,0 +1,17 @@
+<!---
+    Description : This page will be called from the record IMP-004, to process the appointment records 
+                    from the attachments (CSV).
+--->
+<!--
+Created By : Praveen G
+Created On : 13/09/2017
+Service Req: SR_OptiMUS_EON_098
+-->
+<apex:page controller="EON_Update_Appointment_OFSC_CTRL" action="{!processCSVFileAppointments}"
+            showHeader="false" sidebar="false">
+    
+    <br />
+    <br />
+    &nbsp;&nbsp;&nbsp;&nbsp;<apex:outputlabel value="{!message}"></apex:outputlabel>
+
+</apex:page>

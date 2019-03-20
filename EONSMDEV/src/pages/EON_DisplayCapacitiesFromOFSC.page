@@ -1,0 +1,976 @@
+<!--
+    Description : This page is developed to display available earlist time slot comming from oracle system.Slot will be displayed based on checked boxes Monday to Saturday and AM ,PM and Evening slots.
+-->
+<!--
+    Created By     : Chandan K
+    Created On     : 21/04/2016
+    Service Req    : SR_EON_AB_023
+    Change History :
+    #CH01 #SR_EON_AB_068 #14/06/2016 #Puneet Mehta #Made changes for Capacity Override logic.
+    #CH02 #SR_EON_AB_090 #13/07/2016 #Puneet Mehta #Made changes as per SR
+    #CH03 #SR_EON_AB_106 #29/07/2016 #Puneet Mehta #Show capacities from Tomorrow and NOT Today and Capacity Override validation changes
+    #CH04 #SR_EON_AB_178 #26/10/2016 #Puneet Mehta #ECO related changes when rescheduling
+    #CH05 #SR_EON_AB_178 #SR_EON_AB_205 #Praveen G #Added new timeslot 14:00 - 18:00
+    #CH06 #SR_EON_AB_217 #06/04/2017 #Mahadev J# Logic update for effective dates consideration for capacity
+    #CH07 #SR_OptiMUS_EON_280 #24/10/2018 #Mehboob Alam# Logic Update for capacity Overide
+    #CH08 #SR_OptiMUS_EON_287 #19/11/2018 #Guna Sekhar P # Logic Update for capacity Overide to book on sunday also.
+-->
+<apex:page tabStyle="EON_Appointment__c" action="{!getCapacitiesFromOFSC}" id="TimeSlotPage" sidebar="false" controller="EON_DisplayCapacitiesFromOFSC_Ctrl" applyBodyTag="false"  standardStylesheets="true">
+    <html>
+        <head>
+            <script src="/soap/ajax/29.0/connection.js" type="text/javascript"></script>
+            <apex:stylesheet value="{!URLFOR($Resource.slotsAngular, '/css/bootstrap-combined.min.css')}"/>
+            <apex:stylesheet value="{!URLFOR($Resource.slotsAngular, '/css/jquery.datetimepicker.css')}"/><!--CH01-->
+            <apex:includeScript value="{!URLFOR($Resource.slotsAngular, '/js/jquery-1.9.1.min.js')}"/>
+            <apex:includeScript value="{!URLFOR($Resource.slotsAngular, '/js/underscore-min.js')}"/>
+            <apex:includeScript value="{!URLFOR($Resource.slotsAngular, '/js/angular.min.js')}"/>
+            <apex:includeScript value="{!URLFOR($Resource.slotsAngular, '/js/angular-resource.js')}"/>
+            <apex:includeScript value="{!URLFOR($Resource.slotsAngular, '/js/bootstrap.min.js')}"/><!--CH01-->
+            <apex:includeScript value="{!URLFOR($Resource.slotsAngular, '/js/jquery.datetimepicker.js')}"/><!--CH01-->
+            <style type="text/css">
+                body {
+                    background-color: #EEEEEE;
+                    font-size: 12px;
+                }
+                .main {
+                    width:300px;
+                }
+                .month {
+                    background-color:#1797C0;
+                    font-family: Consolas,"courier new";
+                    color:white;
+                    text-transform: uppercase;
+                    letter-spacing: 3px;
+                    font-weight: bold;
+                    border-radius: 8px 8px 0px 0px;
+                }
+                .daysofweek {
+                    background-color:#ddd;
+                    font-family: Consolas,"courier new";
+                    color:#666;
+                }
+                .days {
+                    font-size: 12px;
+                    font-family:verdana;
+                    background-color: #eee;
+                    padding: 2px;
+                    background-color: #1797C0;
+                    color: white;
+                    border: 1px solid white;
+                }
+                .inactiveDays {
+                    font-size: 12px;
+                    font-family:verdana;
+                    color: #BBB6B6;
+                    background-color: #eee;
+                    padding: 2px;
+                    border: 1px solid white;
+                }
+                /* The style to be apllied when hover over slot link */
+                td.slotLink.ng-binding:hover {
+                    background-color: #1797C0;
+                    color: white;
+                }
+                /* The style to be apllied on today */
+                span.today {
+                    font-weight: bold;
+                    color: red;
+                }
+                /* The style to be apllied on 56th Day */
+                span.day56 {
+                    font-weight: bold;
+                    color: red;
+                }
+                .days #inactive{
+                    font-weight: lighter;
+                    color: #BBB6B6;
+                }
+                /* The style to be apllied on hovering over dropdown items */
+                .dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus, .dropdown-submenu:hover>a, .dropdown-submenu:focus>a {
+                    background-image: linear-gradient(to bottom, #1797C0, #1797C0);
+                }
+                .table th, .table td {
+                    text-align: center;
+                }
+                /* The style to be apllied on error message displayed*/
+                .messageText{
+                    font-size: large;
+                    color: white;
+                    background-color: #1797C0;
+                    font-weight: bold;
+                }
+                /* The style is apllied to fix checkbox position issue in firefox */
+                .pull-right {
+                    float: inherit;
+                }
+                /* The style is apllied to fix height of toggle button  */
+                .btn-group>.btn+.dropdown-toggle {
+                    height: 30px;
+                }
+                .message {
+                    background-color: #1797C0;
+                }
+                .errorM6, .errorM4, .errorM3, .errorM2, .errorS1 {
+                    border-color: white;
+                }
+                /*CH01*/
+                .modal {
+                    width: 260px;
+                }
+                /*CH01*/
+                .modal.fade.in {
+                    top: 5%;
+                }
+                /*CH01*/
+                .datePicker {
+                    z-index: 1050;
+                }
+                button.btn, input[type="submit"].btn {
+                    color: #fff;
+                    background: #1797c0;
+                    border-color: #ffffff;
+                    font-family: Arial,Helvetica,sans-serif;
+                    font-size: 12px;
+                    letter-spacing: 0.25px;
+                }
+                .btn:hover, .btn:focus {
+                    color: #fff;
+                    background-color: #43bfe6;
+                }
+                .btn-group.open .btn.dropdown-toggle {
+                    background-color: #43bfe6;
+                }
+                td.days:hover {
+                    background-color: #43bfe6;
+                }
+            </style>
+            <script>
+                var allTypes = []; //Stores the values of the map sent from controller
+                var indexKey;
+                //bookSlots() - Calls the controller function by accepting the parameters as slot selected and date for which the slot is selected
+                function bookSlots(slotP, dateP){
+                    bookSlotsOFSC_JS(slotP,dateP,'','','false');//CH01
+                }
+            </script>
+            <!-- Iterating over the map and storing in javascript array -->
+            <apex:repeat value="{!availableCapacities}" var="key">
+                <script>
+                    allTypes.push('{!key}','{!availableCapacities[key]}');
+                </script>
+            </apex:repeat>
+            <script>
+            
+                var optionValues= [[1,"first"],[2,"second"]];
+
+           jQuery("#mySelect").click( function () {
+             for (var i=0;i<optionValues.length;i++){
+                 jQuery('#mySelect').append(jQuery("<option></option>").val(optionValues[i][0]).text(optionValues[i][1]))
+           }
+            });
+                var appReasonValue = '{!$CurrentPage.parameters.appReason}';//CH04
+                'use strict'; //Defines that JavaScript code should be executed in "strict mode"
+                //The angular.module is a global place for creating, registering and retrieving Angular modules.
+                var App = angular.module('slotApp', ['ngResource']);
+                App.controller('SlotCtrl', ['$scope', function ($scope) {
+                    //CH01.START
+                    $scope.showModal = false;
+                    $scope.toggleModal = function(){
+                        document.getElementById('TimeSlotPage:capacityOvrForm').style.display = 'block';
+                        $scope.showModal = !$scope.showModal;
+                    };
+                    //CH01.END
+                    $scope.selectedSlots = [];
+                    var idSet = [];
+                    $scope.slotList = [{
+                        id: 1,
+                        weekDay: 'Monday'
+                    }, {
+                        id: 2,
+                        weekDay: 'Tuesday'
+                    }, {
+                        id: 3,
+                        weekDay: 'Wednesday'
+                    }, {
+                        id: 4,
+                        weekDay: 'Thursday'
+                    }
+                    , {
+                        id: 5,
+                        weekDay: 'Friday'
+                    }
+                    , {
+                        id: 6,
+                        weekDay: 'Saturday'
+                    }
+                    , {
+                        id: 7,
+                        weekDay: 'Sunday'
+                    }
+                    , {
+                        id: 8,
+                        weekDay: 'AM'
+                    }
+                    , {
+                        id: 9,
+                        weekDay: 'PM'
+                    }
+                    , {
+                        id: 10,
+                        weekDay: 'Evening'
+                    }]; //Stores the drop down items to be displayed in Customer Availability drop down
+                    $scope.clients = '';
+                    var recmndSlts = {!recdtimeSlots}; //assign the value of slots from controller to javascript variable
+                    if(recmndSlts.length != 0){
+                        $scope.clients = {!recdtimeSlots};
+                        $scope.clients = $scope.clients.slice(0,6);
+                        if(appReasonValue == 'ECO')//CH04
+                            $scope.clients = '';//CH04
+                    }
+                    else{
+                        $scope.clients = '';
+                        if(document.getElementById('mainTable').style.display != 'none'){
+                            var oracleBucketIDParam = '{!oracleBucketID}';
+                            if(oracleBucketIDParam == ''){
+                                jQuery('#portalLinkPara').next().append("<div class='message errorM3' role='alert'><table border='0' cellpadding='0' cellspacing='0' class='messageTable' style='padding:0px;margin:0px;'><tbody><tr valign='top'><td><img alt='ERROR' src='/s.gif' class='msgIcon' title='ERROR'></td><td class='messageCell'><div class='messageText'><span style='color:#cc0000'><h4>Error:</h4></span>No Oracle Bucket ID defined<br></div></td></tr><tr><td></td><td></td></tr></tbody></table></div>");
+                                document.getElementById('mainTable').style.display = 'none';
+                            }
+                            if(jQuery("div.errorM3:contains('Error')") && jQuery("div.errorM3:contains('Error')").length > 0){}
+                            else{
+                                alert('No slots available');
+                            }
+                        }
+                    }
+                    $scope.filterList = {
+                      1 : 'Monday',
+                      2 : 'Tuesday',
+                      3 : 'Wednesday',
+                      4 : 'Thursday',
+                      5 : 'Friday',
+                      6 : 'Saturday',
+                      7 : 'Sunday',
+                      8 : ['08:00 - 10:00', '10:00 - 12:00', '08:00 - 12:00'],
+                      9 : ['12:00 - 14:00', '14:00 - 16:00', '12:00 - 16:00', '14:00 - 18:00'], // CH05
+                      10 : ['16:00 - 18:00', '18:00 - 20:00', '16:00 - 20:00']
+                    }
+                    //Method called when 'All Slots' is clicked
+                    $scope.getDefaultClient = function () {
+                        $scope.open = false;
+                        $scope.clients = {!recdtimeSlots};
+                        $scope.clients = $scope.clients.slice(0,6);
+                        if(appReasonValue == 'ECO')//CH04
+                            $scope.clients = '';//CH04
+                        $scope.selectedSlots = [];
+                    };
+                    //Method called everytime a drop down item is selected
+                    $scope.setSelectedClient = function () {
+                        $scope.open = false;
+                        $scope.clients = {!recdtimeSlots};
+                        if(appReasonValue == 'ECO')//CH04
+                            $scope.clients = '';//CH04
+                        var id = this.slot.id;
+                        if(idSet.indexOf(id) === -1)
+                        idSet.push(id);
+                        var index;
+                        if(idSet.indexOf(1) != -1 && id != 1 && id < 8)
+                        {
+                            index = $scope.selectedSlots.indexOf(1);
+                            $scope.selectedSlots.splice(index, 1);
+                        }
+                        if(idSet.indexOf(2) != -1 && id != 2 && id < 8)
+                        {
+                            index = $scope.selectedSlots.indexOf(2);
+                            $scope.selectedSlots.splice(index, 1);
+                        }
+                        if(idSet.indexOf(3) != -1 && id != 3 && id < 8)
+                        {
+                            index = $scope.selectedSlots.indexOf(3);
+                            $scope.selectedSlots.splice(index, 1);
+                        }
+                        if(idSet.indexOf(4) != -1 && id != 4 && id < 8)
+                        {
+                            index = $scope.selectedSlots.indexOf(4);
+                            $scope.selectedSlots.splice(index, 1);
+                        }
+                        if(idSet.indexOf(5) != -1 && id != 5 && id < 8)
+                        {
+                            index = $scope.selectedSlots.indexOf(5);
+                            $scope.selectedSlots.splice(index, 1);
+                        }
+                        if(idSet.indexOf(6) != -1 && id != 6 && id < 8)
+                        {
+                            index = $scope.selectedSlots.indexOf(6);
+                            $scope.selectedSlots.splice(index, 1);
+                        }
+                        if(idSet.indexOf(7) != -1 && id != 7 && id < 8)
+                        {
+                            index = $scope.selectedSlots.indexOf(7);
+                            $scope.selectedSlots.splice(index, 1);
+                        }
+                        if (_.contains($scope.selectedSlots, id)) {
+                            $scope.selectedSlots = _.without($scope.selectedSlots, id);
+                        } else {
+                            $scope.selectedSlots.push(id);
+                        }
+                        return false;
+                    };
+                    //Method that adds the checkbox icon next to selected drop down item
+                    $scope.isChecked = function (id) {
+                        if (_.contains($scope.selectedSlots, id)) {
+                            return 'icon-ok pull-right';
+                        }
+                        return false;
+                    };
+                    //Method to filter records
+                    $scope.filterClients = function(client)
+                    {
+                      var rc = true;
+                      for(var i=0;i<$scope.selectedSlots.length;i++ )
+                      {
+                        var currentSlot = $scope.selectedSlots[i];
+                        if(currentSlot < 8)
+                        {
+                          if(client.slot.weekDay != $scope.filterList[currentSlot])
+                            return false;
+                        }
+                        else
+                        {
+                          if($scope.filterList[currentSlot].indexOf(client.slotPeriod) == -1)
+                            return false;
+                        }
+                      }
+                      return true;
+                    }
+                }]);
+                //CH01.START
+                App.directive('modal', function () {
+                    return {
+                      template: '<div class="modal fade">' + 
+                          '<div class="modal-dialog">' + 
+                            '<div class="modal-content">' + 
+                              '<div class="modal-header">' + 
+                                '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>' + 
+                                '<h4 class="modal-title">{{ title }}</h4>' + 
+                              '</div>' + 
+                              '<div class="modal-body" ng-transclude></div>' + 
+                            '</div>' + 
+                          '</div>' + 
+                        '</div>',
+                      restrict: 'E',
+                      transclude: true,
+                      replace:true,
+                      scope:true,
+                      link: function postLink(scope, element, attrs) {
+                        scope.title = attrs.title;
+                        scope.$watch(attrs.visible, function(value){
+                          if(value == true)
+                            $(element).modal('show');
+                          else
+                            $(element).modal('hide');
+                        });
+                        $(element).on('shown.bs.modal', function(){
+                          scope.$apply(function(){
+                            scope.$parent[attrs.visible] = true;
+                          });
+                        });
+                        $(element).on('hidden.bs.modal', function(){
+                          scope.$apply(function(){
+                            scope.$parent[attrs.visible] = false;
+                          });
+                        });
+                      }
+                    };
+                });
+                //CH01.END
+            </script>
+            <script>
+                //Method to generate calendar month based on parameter passed
+                function buildCal(m, y, cM, cH, cDW, cD, brdr){
+                    var mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
+                    var dim=[31,0,31,30,31,30,31,31,30,31,30,31];
+                    var dateString;
+                    if(m > 12){m = m -12; y = y + 1;}
+                    var oD = new Date(y, m-1, 1); //replaced line to fix date bug when current day is 31st
+                    oD.od=oD.getDay()+1; //replaced line to fix date bug when current day is 31st
+                    var todaydate=new Date();
+                    var tomorrowDate = new Date();// to get date for tomorrow //CH03
+                    tomorrowDate.setDate(tomorrowDate.getDate() + 1);//CH03
+                    var scanfortoday=(y==todaydate.getFullYear() && m==todaydate.getMonth()+1)? todaydate.getDate() : 0;
+                    var date_56 = new Date();// to get the 56th Day from today
+                    //var numberOfDaysToAdd = 55;//CH03.OLD
+                    var numberOfDaysToAdd = 56;//CH03
+                    date_56.setDate(date_56.getDate() + numberOfDaysToAdd);
+                    dateString = ''+ mn[date_56.getMonth()] + ' '+ date_56.getDate() + ', ' + date_56.getFullYear();
+                    var date_56MilliSeconds = Date.parse(dateString);
+                    dateString = ''+ mn[tomorrowDate.getMonth()] + ' '+ tomorrowDate.getDate() + ', ' + tomorrowDate.getFullYear();//CH03
+                    //dateString = ''+ mn[todaydate.getMonth()] + ' '+ todaydate.getDate() + ', ' + todaydate.getFullYear();//CH03.OLD
+                    //var todayMilliSeconds = Date.parse(dateString);//CH03.OLD
+                    var tomorrowMilliSeconds = Date.parse(dateString);//CH03
+                    dim[1]=(((oD.getFullYear()%100!=0)&&(oD.getFullYear()%4==0))||(oD.getFullYear()%400==0))?29:28; //leap year calculation
+                    var t='<div class="'+cM+'"><table class="'+cM+'" cols="7" cellpadding="0" border="'+brdr+'" cellspacing="0"><tr align="center" style="border: 1px solid white;">';
+                    t+='<td colspan="7" align="center" class="'+cH+'">'+mn[m-1]+' - '+y+'</td></tr><tr align="center">';
+                    for(s=0;s<7;s++)t+='<td class="'+cDW+'">'+"SMTWTFS".substr(s,1)+'</td>';
+                    t+='</tr><tr align="center">';
+                    for(i=1;i<=42;i++){
+                        var x=((i-oD.od>=0)&&(i-oD.od<dim[m-1]))? i-oD.od+1 : '&nbsp;';
+                        if(x != '&nbsp;'){
+                            dateString = ''+ mn[m-1] + ' '+ x + ', ' + oD.getFullYear();
+                            var d = Date.parse(dateString);
+                            var dateKey =  new Date(d);
+                            dateKey =  dateKey.toString().replace(oD.getFullYear() + ' ', '');
+                            var indexGMT;
+                            indexGMT = dateKey.indexOf('GMT');
+                            dateKey =  dateKey.slice(0, indexGMT);
+                            dateKey = dateKey + 'GMT ' + oD.getFullYear();
+                            if (x==scanfortoday)
+                            x='<span class="today" id="'+d+'">'+x+'</span>';
+                            else if(d == date_56MilliSeconds)
+                            x='<span class="day56" id="'+d+'">'+x+'</span>';
+                            else
+                            x='<span id="'+d+'">'+x+'</span>';
+                            //if the day in the calendar is less than today OR more than 56th day OR not present in the slots sent from controller 
+                            //then display as inactive
+                            //if(d < todayMilliSeconds || d > date_56MilliSeconds || allTypes.indexOf(dateKey)=== -1){//CH03
+                            if(d < tomorrowMilliSeconds || d > date_56MilliSeconds || allTypes.indexOf(dateKey)=== -1 || appReasonValue == 'ECO'){//CH03//CH04
+                                t+='<td class="inactiveDays">'+x+'</td>';
+                            }
+                            else{
+                                indexKey = allTypes.indexOf(dateKey);
+                                t+='<td class="'+cD+'" style="cursor: pointer;" onclick="getSelectedDaySlots('+indexKey+');">'+x+'</td>';
+                            }
+                        }
+                        else{
+                            x='<span>'+x+'</span>';
+                            t+='<td style="background-color: #eee;">'+x+'</td>';
+                        }
+                        if(((i)%7==0)&&(i<36))t+='</tr><tr align="center">';
+                    }
+                    return t+='</tr></table></div>';
+                }
+                //Method to get slots for selected day
+                function getSelectedDaySlots(indexK) {
+                    var dayOfWeek;
+                    var dayId;
+                    var dateStrngFrmt = new Date(allTypes[indexK]);
+                    var dd = dateStrngFrmt.getDate();
+                    var mm = dateStrngFrmt.getMonth()+1; //January is 0
+                    var yyyy = dateStrngFrmt.getFullYear();
+                    //un-comment to display as 05-06-2016 instead of 5-6-2016
+                    //if(dd<10){dd='0'+dd} if(mm<10){mm='0'+mm}
+                    var dateUse = dd+'-'+mm+'-'+yyyy;
+                    var availSlots = [];
+                    if(allTypes[indexK + 1] != ''){
+                        if(allTypes[indexK + 1].indexOf('Monday') != -1){
+                            dayOfWeek = 'Monday'; dayId = '1';}
+                        if(allTypes[indexK + 1].indexOf('Tuesday') != -1){
+                            dayOfWeek = 'Tuesday'; dayId = '2';}
+                        if(allTypes[indexK + 1].indexOf('Wednesday') != -1){
+                            dayOfWeek = 'Wednesday'; dayId = '3';}
+                        if(allTypes[indexK + 1].indexOf('Thursday') != -1){
+                            dayOfWeek = 'Thursday'; dayId = '4';}
+                        if(allTypes[indexK + 1].indexOf('Friday') != -1){
+                            dayOfWeek = 'Friday'; dayId = '5';}
+                        if(allTypes[indexK + 1].indexOf('Saturday') != -1){
+                            dayOfWeek = 'Saturday'; dayId = '6';}
+                        if(allTypes[indexK + 1].indexOf('Sunday') != -1){
+                            dayOfWeek = 'Sunday'; dayId = '7';}
+                        if(allTypes[indexK + 1].indexOf('08:00 - 10:00') != -1)
+                            availSlots.push('08:00 - 10:00');
+                        if(allTypes[indexK + 1].indexOf('10:00 - 12:00') != -1)
+                            availSlots.push('10:00 - 12:00');
+                        if(allTypes[indexK + 1].indexOf('08:00 - 12:00') != -1)
+                            availSlots.push('08:00 - 12:00');
+                        if(allTypes[indexK + 1].indexOf('12:00 - 14:00') != -1)
+                            availSlots.push('12:00 - 14:00');
+                        if(allTypes[indexK + 1].indexOf('14:00 - 16:00') != -1)
+                            availSlots.push('14:00 - 16:00');
+                        if(allTypes[indexK + 1].indexOf('12:00 - 16:00') != -1)
+                            availSlots.push('12:00 - 16:00');
+                        if(allTypes[indexK + 1].indexOf('16:00 - 18:00') != -1)
+                            availSlots.push('16:00 - 18:00');
+                        if(allTypes[indexK + 1].indexOf('18:00 - 20:00') != -1)
+                            availSlots.push('18:00 - 20:00');
+                        if(allTypes[indexK + 1].indexOf('16:00 - 20:00') != -1)
+                            availSlots.push('16:00 - 20:00');
+                    }
+                    //generating the json format to be accepted by angular array
+                    var clientStr = '[';
+                    for(var i=0; i<availSlots.length;i++){  
+                        clientStr = clientStr + '{\"dateInst\": ';
+                        clientStr = clientStr + '\"' + dateUse + '\",\"slotPeriod\": \"' +availSlots[i] + '\",\"slot\": {\"id\": ' + dayId + ',\"weekDay\": \"'+dayOfWeek+'\"}';
+                        clientStr = clientStr + '}';
+                        if(i != availSlots.length - 1)
+                            clientStr = clientStr + ',';
+                    }
+                    clientStr = clientStr + ']';
+                    var myobj = JSON.parse(clientStr);
+                    //To access AngularJS scope from outside js function
+                    var scope = angular.element($("#outer")).scope();
+                    scope.$apply(function(){
+                            scope.clients = myobj;
+                            //scope.clients = scope.clients.slice(0,6);//CH02
+                            scope.selectedSlots = [];//To clear if any drop down item was selected
+                    })
+                }
+                
+               //CH07.start
+               function generateOverrideReason(){
+                document.getElementById('_datetimepicker2').style.display = "none";
+                document.getElementById('aStarttime').style.display = "none";
+                document.getElementById('aTimeSlot').style.display = "none";
+                document.getElementById('slotSelect').style.display = "none";
+                var i;
+                for(i=document.getElementById('overrideReason').options.length-1;i>=0;i--){
+                  selectbox.remove(i);
+                }
+                var mapOverrideReason = new Map();
+                mapOverrideReason.set('MOSE', 'MOSE');
+                mapOverrideReason.set('New Connection', 'New Connection');
+                mapOverrideReason.set('Contractual', 'Contractual');
+                mapOverrideReason.set('Minor Complaint', 'Minor Complaint');
+                mapOverrideReason.set('THD Request', 'THD Request');
+                if('{!$User.Capacity_Override__c}'=='true'){
+                   mapOverrideReason.set('Sensitive Customer', 'Sensitive Customer');
+                   mapOverrideReason.set('Commercial Escalation', 'Commercial Escalation');
+                   mapOverrideReason.set('Major Complaint', 'Major Complaint');
+                }
+                 for (var [key, value] of mapOverrideReason) {
+                     $('<option value="'+ key +'">' + value + '</option>').appendTo('#overrideReason');
+                   }
+                }
+
+             
+              function CurrentTimeSlots(){
+               var j;
+                for(j=document.getElementById('slotSelect').options.length-1;j>=0;j--){
+                  selectbox.remove(j);
+                }
+                var allDaySlots = new Map();
+                allDaySlots.set(0810, '08:00 - 10:00');
+                allDaySlots.set(0812, '08:00 - 12:00');
+                allDaySlots.set(0818, '08:00 - 18:00');
+                allDaySlots.set(1012, '10:00 - 12:00');
+                allDaySlots.set(1014, '10:00 - 14:00');
+                allDaySlots.set(1214, '12:00 - 14:00');
+                allDaySlots.set(1216, '12:00 - 16:00');
+                allDaySlots.set(1416, '14:00 - 16:00');
+                allDaySlots.set(1418, '14:00 - 18:00');
+                allDaySlots.set(1618, '16:00 - 18:00');
+                allDaySlots.set(1620, '16:00 - 20:00');
+                allDaySlots.set(1820, '18:00 - 20:00');
+                 for (var [key, value] of allDaySlots) {
+                   if(new Date().getHours()<String(key).substring(2,4))
+                     $('<option value="'+ key +'">' + value + '</option>').appendTo('#slotSelect');
+                   }
+                }
+                
+               function validateOverrideReq(){
+                 var overRes = document.getElementById('overrideReason').value;
+                 if(overRes =='MOSE'){
+                     document.getElementById('_datetimepicker2').style.display = "none";
+                     document.getElementById('aStarttime').style.display = "none";
+                     document.getElementById('aTimeSlot').style.display = "none";
+                     document.getElementById('slotSelect').style.display = "none";
+                     }
+                if(overRes =='New Connection' || overRes =='Contractual' || overRes =='Minor Complaint' || overRes =='THD Request'){
+                     document.getElementById('_datetimepicker2').style.display = "none";
+                     document.getElementById('aStarttime').style.display = "none";
+                     document.getElementById('aTimeSlot').style.display = "block";
+                     document.getElementById('slotSelect').style.display = "block";
+                     }
+                
+                if(overRes =='Sensitive Customer' || overRes =='Commercial Escalation' || overRes =='Major Complaint'){
+                     document.getElementById('_datetimepicker2').style.display = "block";
+                     document.getElementById('aStarttime').style.display = "block";
+                     document.getElementById('aTimeSlot').style.display = "none";
+                     document.getElementById('slotSelect').style.display = "none";
+                     }                       
+     
+                }
+                //CH07.End
+                
+                //CH01.START
+                function capacityOverridden(){
+                    //#CH06.New.Start
+                    var elecFromDate = '{!effectiveFrom}';
+                    var eDate;
+                    if(elecFromDate != ''){
+                        var splitElecDate = elecFromDate.split(' ');
+                        var mon = '';
+                        if(splitElecDate[1] == 'Jan')
+                            mon = 0;
+                        if(splitElecDate[1] == 'Feb')
+                            mon = 1;
+                        if(splitElecDate[1] == 'Mar')
+                            mon = 2;
+                        if(splitElecDate[1] == 'Apr')
+                            mon = 3;
+                        if(splitElecDate[1] == 'May')
+                            mon = 4;
+                        if(splitElecDate[1] == 'Jun')
+                            mon = 5;
+                        if(splitElecDate[1] == 'Jul')
+                            mon = 6;
+                        if(splitElecDate[1] == 'Aug')
+                            mon = 7;
+                        if(splitElecDate[1] == 'Sep')
+                            mon = 8;
+                        if(splitElecDate[1] == 'Oct')
+                            mon = 9;
+                        if(splitElecDate[1] == 'Nov')
+                            mon = 10;
+                        if(splitElecDate[1] == 'Dec') 
+                            mon = 11;
+                        eDate = new Date(splitElecDate[5],mon,splitElecDate[2]);
+                    }
+                    var gasDate = '{!gEffectiveFrom}';
+                    var gDate;
+                    if(gasDate != ''){
+                        var splitGasDate = gasDate.split(' ');
+                        var mon = '';
+                        if(splitGasDate[1] == 'Jan')
+                            mon = 0;
+                        if(splitGasDate[1] == 'Feb')
+                            mon = 1;
+                        if(splitGasDate[1] == 'Mar')
+                            mon = 2;
+                        if(splitGasDate[1] == 'Apr')
+                            mon = 3;
+                        if(splitGasDate[1] == 'May')
+                            mon = 4;
+                        if(splitGasDate[1] == 'Jun')
+                            mon = 5;
+                        if(splitGasDate[1] == 'Jul')
+                            mon = 6;
+                        if(splitGasDate[1] == 'Aug')
+                            mon = 7;
+                        if(splitGasDate[1] == 'Sep')
+                            mon = 8;
+                        if(splitGasDate[1] == 'Oct')
+                            mon = 9;
+                        if(splitGasDate[1] == 'Nov')
+                            mon = 10;
+                        if(splitGasDate[1] == 'Dec') 
+                            mon = 11;
+                        gDate = new Date(splitGasDate[5],mon,splitGasDate[2]);
+                    }
+                    var compareFromDate = new Date();
+                    var compareToDate   = new Date();
+                    if(eDate != '' && gDate != ''){
+                        if(eDate > gDate)
+                            compareFromDate = eDate;
+                        else
+                            compareFromDate = gDate;
+                    }
+                    else if(eDate != '')
+                        compareFromDate = eDate;
+                    else if(gDate != '')
+                        compareFromDate = gDate;
+                    
+                    var sladt = document.getElementById('TimeSlotPage:capacityOvrForm:slaDate').value;
+                    var splitSLAdt = sladt.split('/');
+                    var sDate = new Date(splitSLAdt[2],splitSLAdt[1]-1,splitSLAdt[0]);
+                    if(compareFromDate > sDate){
+                        alert('SLA Date should be greater than Effective From Dates.');
+                        return false;
+                    }
+                    //#CH06.New.End
+                    var overrideReason = document.getElementById('overrideReason').value;
+                    var slaDate = document.getElementById('TimeSlotPage:capacityOvrForm:slaDate').value;//22/06/2016
+                    var apptStartTime = document.getElementById('_datetimepicker2').value;
+                    var slotP1;
+                    var dateP1;
+                    var parts; //CH03
+                    var d; //CH03
+                    var SpecificTimeFlag = 'false';
+                    
+                    if(overrideReason === ''){
+                        alert('Please select a value for Capacity Override reason');
+                        return false;
+                    }
+                    
+                     if((slaDate === '')){
+                        alert('Please select a value for SLA Date');
+                        return false;
+                    }
+                    
+                    if(overrideReason =='SensitiveCustomer' || overrideReason =='CommercialEscalation' || overrideReason =='MajorComplaint'){
+                       if(apptStartTime == ''){
+                          alert('Please select a value for Appointment Start time');
+                          return false;
+                     }
+                    }
+                    
+                    if(slaDate != ''){
+                        var pattern =/^([0-3]{1}[0-9]{1})\/([0-1]{1}[0-9]{1})\/([0-9]{4})$/;
+                        var check = pattern.test(slaDate);
+                        if(check){
+                            parts = slaDate.split('/');
+                            d = new Date(parts[2],parts[1]-1,parts[0]);
+                            var weekday = new Array(7);
+                            weekday[0]=  "Sunday";
+                            weekday[1] = "Monday";
+                            weekday[2] = "Tuesday";
+                            weekday[3] = "Wednesday";
+                            weekday[4] = "Thursday";
+                            weekday[5] = "Friday";
+                            weekday[6] = "Saturday";
+                            var n = weekday[d.getDay()];
+                            <!--CH08-->
+                            <!--
+                            if(n == 'Sunday'){
+                                alert('Cannot book on Sundays');
+                                return false;
+                            }
+                            -->
+                            //CH03.START
+                            var mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
+                            var todaysDate = new Date();// to get todays date
+                            var dateString = ''+ mn[todaysDate.getMonth()] + ' '+ todaysDate.getDate() + ', ' + todaysDate.getFullYear();
+                            var date_todayMilliSeconds = Date.parse(dateString);
+                            dateString = ''+ mn[parts[1] - 1] + ' '+ parts[0] + ', ' + parts[2];
+                            var date_slaDateMilliSeconds = Date.parse(dateString);
+                            var date_56 = new Date();// to get the 56th Day from today
+                            date_56.setDate(date_56.getDate() + 55);
+                            dateString = ''+ mn[date_56.getMonth()] + ' '+ date_56.getDate() + ', ' + date_56.getFullYear();
+                            var date_56MilliSeconds = Date.parse(dateString);
+                            if(date_slaDateMilliSeconds < date_todayMilliSeconds || date_slaDateMilliSeconds > date_56MilliSeconds){
+                                alert('Appointment date can only be from today until next 56 days');
+                                return false;
+                            }
+                            //CH03.END
+                        }
+                        else{
+                            alert('Please select correct date from calendar');
+                            return false;
+                        }
+                    }
+                    if(apptStartTime != ''){
+                        SpecificTimeFlag ='true';
+                        var parts1 = apptStartTime.split(':');
+                        //CH03.START
+                        if(d.getDate() == new Date().getDate() && d.getMonth() == new Date().getMonth() && d.getFullYear() == new Date().getFullYear() && ((parts1[0] < new Date().getHours()) || (parts1[0] == new Date().getHours() && parts1[1] < new Date().getMinutes()))){
+                            alert('Appointment time can not be less than current time');
+                            return false;
+                        }
+                        //CH03.END
+                        if(parseInt(parts1[0]) < 12){
+                            slotP1 = '08:00 - 12:00';
+                            if(appReasonValue == 'ECO'){//CH04
+                                slotP1 = 'ECO';//CH04
+                            }//CH04
+                        }
+                        else if(parseInt(parts1[0]) < 16 && parseInt(parts1[0]) > 12 || (parseInt(parts1[0]) == 12 && parseInt(parts1[1]) == 0)){
+                            slotP1 = '12:00 - 16:00';
+                            if(appReasonValue == 'ECO'){//CH04
+                                slotP1 = 'ECO';//CH04
+                            }//CH04
+                        }
+                        else{
+                            slotP1 = '16:00 - 20:00';
+                            if(appReasonValue == 'ECO'){//CH04
+                                slotP1 = 'ECO';//CH04
+                            }//CH04
+                        }
+                        if(parseInt(parts1[0]) < 8 || parseInt(parts1[0]) > 20 || (parseInt(parts1[0]) == 20 && parseInt(parts1[1]) > 0)){
+                            if(appReasonValue == 'ECO'){//CH04
+                                slotP1 = 'Night';//CH04
+                            }//CH04
+                            else{
+                                alert('Cannot book out of hours');
+                                return false;
+                            }
+                        }
+                    }
+                    
+                    //CH07.Start
+                    if(overrideReason==='MOSE'){
+                       slotP1= '08:00 - 18:00';
+                    }
+                    
+                    if(overrideReason =='New Connection' || overrideReason =='Contractual' || overrideReason =='Minor Complaint' || overrideReason =='THD Request'){
+                       var selslot = document.getElementById('slotSelect').value;
+                       slotP1= selslot.substring(0,2)+':00 - '+selslot.substring(2,4)+':00';
+                    }
+                    //CH07.End
+                    
+                    dateP1 = slaDate.replace(/\//g, "-");
+                    var overrideReason = document.getElementById('overrideReason').value;
+                    if(overrideReason != ''){
+                        bookSlotsOFSC_JS(slotP1,dateP1,overrideReason,apptStartTime,SpecificTimeFlag);
+                        var scope = angular.element($("#outer")).scope();
+                        scope.$apply(function(){
+                            scope.showModal = false;
+                        })
+                        return false;
+                    }
+                }
+                //CH01.END
+            </script>
+            <script type="text/javascript" language="JavaScript">
+                //Method to start the countdown of 3 minutes
+                function startTimer(duration, display) {
+                    var timer = duration, minutes, seconds;
+                    setInterval(function () {
+                        minutes = parseInt(timer / 60, 10)
+                        seconds = parseInt(timer % 60, 10);
+                        
+                        minutes = minutes < 10 ? "0" + minutes : minutes;
+                        seconds = seconds < 10 ? "0" + seconds : seconds;
+                        
+                        display.textContent = minutes + ":" + seconds;
+                        
+                        if (--timer < 0) {
+                        reloadPage();
+                        alert("Your page will be refreshed!");
+                        timer = duration;
+                        }
+                    }, 1000);
+                }
+                //Method to reload the page
+                function reloadPage(){
+                    window.location.href = window.location.href;
+                }
+                //Method that will be automatically called when the page/window loads
+                window.onload = function () {
+                    var threeMinutes = 60 * 3,
+                    display = document.querySelector('#time'); //pass the id of the span where timer needs to be displayed
+                    startTimer(threeMinutes, display);
+                };
+            </script>
+        </head>
+        <body data-ng-app="slotApp" class="ng-scope">
+            <table style="width:100%;">
+                <td style="width:75%; background-color: #1797C0; border-radius: 8px 0px 0px 8px;">
+                    <p id="portalLinkPara" style="width: 120px; border-style: solid;border-color: white; border-radius: 12px;"><a style="color:white;font-weight: bold;" href="/apex/EON_Appointment_Booking"><img src="/img/icon/computer24.png" title="Booking Portal"></img>Booking Portal</a></p><!--CH01-->
+                    <apex:form id="form1">
+                        <apex:actionFunction name="bookSlotsOFSC_JS" action="{!bookSlotsOFSC}" id="actFn" reRender="mymsg">
+                            <apex:param id="slotSel" name="slotSelected" value="" />
+                            <apex:param id="dateSel" name="dateSelected" value="" />
+                            <apex:param id="ovrdReason" name="capacityOvrReason" value="" /><!--CH01-->
+                            <apex:param id="apptStartTime" name="apptStartTime" value="" /><!--CH01-->
+                            <apex:param id="specificTimeFlag" name="specificTimeFlag" value="" /><!--CH01-->
+                        </apex:actionFunction>
+                        <apex:pageMessages id="mymsg" escape="false"></apex:pageMessages><!--CH02-->
+                    </apex:form>
+                </td>
+                <td style="width:25%;background-color: #1797C0; border-radius: 0px 8px 8px 0px;">
+                    <form id="form2">
+                        <div style="color: white;font-size: x-large;font-weight: bold;float:right;border: 1px solid white; padding: 15px;background-color: #1797C0;border-radius: 48px 48px 48px 48px;">
+                            Timer: <span id="time" style="font-weight: bold;color: white;font-size: x-large;">03:00</span> minute
+                        </div>
+                    </form>
+                </td>
+            </table>
+            <script type="text/javascript">
+                var todaydate=new Date()
+                var curmonth=todaydate.getMonth()+1; //get current month (1-12)
+                var curyear=todaydate.getFullYear(); //get current year
+            </script>
+            <table width="100%" id="mainTable" style="display:{!IF(ISNULL(appointmentID), 'none', '')};">
+                <tr>
+                    <td width="30%" height="200">
+                        <div data-ng-controller="SlotCtrl" id="outer">
+                            <!--CH01-->
+                            <button ng-click="toggleModal()" class="btn"  style="margin-left: 155px;" onclick="CurrentTimeSlots();generateOverrideReason();">Capacity Override</button>
+                            <modal title="Capacity Override" visible="showModal" height="300">
+                                <apex:form id="capacityOvrForm">
+                                    <form role="form">
+                                      <div class="form-group">
+                                        <label for="overrideReason">Capacity Override reason</label>
+                                        <!--<input autocomplete="off" type="text" maxlength="100" required="true" class="form-control" id="overrideReason" placeholder="Enter Capacity Override reason">-->
+                                        <select class="form-control" id="overrideReason" placeholder="Enter Capacity Override reason" onchange="validateOverrideReq();">
+                                        </select>
+                                      </div>
+                                      <div class="form-group">
+                                        <label for="slaDate">SLA date</label>
+                                        <apex:inputfield value="{!apptInstance.Appointment_Date__c}" id="slaDate"/>
+                                      </div>
+                                      <div class="form-group">
+                                        <label for="aTimeSlot" id="aTimeSlot">Available Time Slot</label>
+                                        <select id="slotSelect" name="tSlot"></select>
+                                      </div>
+                                      <div class="form-group">
+                                        <label for="slaDate" id='aStarttime'>Appointment Start time</label>
+                                        <input id="_datetimepicker2" type="text" required="true" autocomplete="off"></input>
+                                      </div>
+                                      <br/>
+                                      <button type="submit" class="btn btn-default" onclick="return capacityOverridden();">Submit</button>
+                                    </form>
+                                </apex:form>
+                            </modal>
+                            <!--CH01-->
+                            <ul class="inline">
+                                <li>
+                                    <div class="btn-group" data-ng-class="{open: open}">
+                                        <button class="btn">Customer Availability</button>
+                                        <button class="btn dropdown-toggle" data-ng-click="open=!open"><span class="caret"></span></button>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu">
+                                            <li><a data-ng-click="getDefaultClient()"> <i class="icon-remove-sign"></i> All Slots</a></li>
+                                            <!--<li><a data-ng-click="selectedSlots=[];"><i class="icon-remove-sign"></i> All Slots</a></li>-->
+                                            <li class="divider"></li>
+                                            <li data-ng-repeat="slot in slotList"> <a data-ng-click="setSelectedClient()">{{slot.weekDay}}<span data-ng-class="isChecked(slot.id)"></span></a></li>
+                                        </ul>
+                                    </div>
+                                    <button class="btn" onclick="reloadPage();" style="margin-left: 35px;">Refresh Capacity</button>
+                                </li>
+                            </ul>
+                            <h4>Recommended Timeslots (Earliest Available)</h4>
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th style="width:10%">#</th>
+                                        <th style="width:30%">Day</th>
+                                        <th style="width:30%">Date</th>
+                                        <th style="width:30%">Slot</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr data-ng-repeat="client in clients | filter:filterClients | limitTo:6"><!--CH02-->
+                                        <td>{{$index + 1}}</td>
+                                        <td>{{client.slot.weekDay}}</td>
+                                        <td>{{client.dateInst}}</td>
+                                        <td onclick="if(confirm('Are you sure you want to book this slot for {{client.dateInst}}?')) bookSlots('{{client.slotPeriod}}','{{client.dateInst}}');" style="text-decoration: underline; cursor: pointer;" class="slotLink">{{client.slotPeriod}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                    <td width="70%" style="position: fixed;">
+                        <table border="0" cellspacing="0" cellpadding="3">
+                            <tr>
+                                <td width="34%">
+                                    <script>
+                                        document.write(buildCal(curmonth ,curyear, "main", "month", "daysofweek", "days", 0)); <!-- Current Month -->
+                                    </script>
+                                </td>
+                                <td width="33%">
+                                    <script>
+                                        document.write(buildCal(curmonth + 1,curyear, "main", "month", "daysofweek", "days", 0));<!-- Current Month + 1 -->
+                                    </script>
+                                </td>
+                                <td width="33%">
+                                    <script>
+                                        document.write(buildCal(curmonth+ 2 ,curyear, "main", "month", "daysofweek", "days", 0));<!-- Current Month + 2 -->
+                                    </script>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        <script>
+        //CH01.START
+        $(document).ready(function() {
+            $('#_datetimepicker2').datetimepicker({
+                datepicker:false,
+                format:'H:i'
+            });
+        });
+        if(document.getElementById('TimeSlotPage:capacityOvrForm') != null){
+            document.getElementById('TimeSlotPage:capacityOvrForm').style.display = 'none';
+        }
+        //CH01.END
+        </script>
+    </html>
+</apex:page>

@@ -1,0 +1,289 @@
+<!---
+    Description : Description : This page is to create appointment when reschedule button is clicked for replan.
+--->
+
+<!-- 
+    Created By : Praveen G
+    Created Date : 08/02/2018
+    Service Request : SR_OptiMUS_EON_179
+-->
+
+<apex:page tabStyle="EON_Appointment__c" showHeader="true" sidebar="false" standardController="EON_Appointment__c" 
+                        extensions="EON_Create_Appointment_Replan_ctrl" id="mypage">
+
+
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-1.7.2.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-ui-1.8.21.custom.min.js')}" />
+    <apex:sectionHeader title="EON Appointment Edit" subtitle="{!EON_Appointment__c.Name}" id="SH"/>
+
+<style>
+        input[type="button"]:disabled {
+        color: grey;
+        }
+        .SalesforceDetailFont {
+        color:#4a4a56;
+        white-space: normal;
+        text-align: right;
+        font-size: 91%;
+        font-weight: bold;
+        margin-right: 15px;
+        }
+        .imgclass:hover{
+        background-image: url(/img/help/helpOrbs.gif);
+        background-repeat: no-repeat;
+        width: 16px;
+        height: 15px;
+        background-position: right;
+        }
+        .imgclass{
+        background-image: url(/img/help/helpOrbs.gif);
+        background-repeat: no-repeat;
+        width: 16px;
+        height: 15px;
+        }
+        body input.btn {
+        color: #fff;
+        background: #1797c0;
+        border-color: #ffffff;
+        font-family: Arial,Helvetica,sans-serif;
+        letter-spacing: 0.25px;
+        }
+        .btn:hover, .btn:focus {
+        color: #fff;
+        background-color: #43bfe6;
+        } 
+    </style>
+    
+    <apex:form id="myform">
+        <apex:pageMessages id="mymsg" ></apex:pageMEssages>
+        <apex:pageBlock id="pb1" title="EON Appointment Edit" mode="Edit">
+        
+            <apex:pageBlockSection columns="2" id="pbs1" title="Information">
+                <apex:inputField id="Access" value="{!newAppointment.Access_Pass_Phrase__c}"/> 
+                <apex:outputField id="Caller" value="{!newAppointment.Caller_Name__c}"/> 
+                
+                <apex:outputField value="{!newAppointment.Current_SSC__c}"/>
+                <apex:outputText value="" />
+                
+                <apex:outputField value="{!newAppointment.Requested_SSC__c}"/>
+                
+                <apex:inputField id="Notes" value="{!newAppointment.Notes__c}"/> 
+                
+                <apex:outputField id="eMeter" value="{!newAppointment.Planned_E_Meter_Type__c}" /> 
+                
+                <apex:outputField id="gMeter1" value="{!newAppointment.Planned_G_Meter_Type__c}" />
+                
+                <apex:inputField id="dvd" value="{!newAppointment.DVD_Requested__c}"/>
+                
+                <apex:inputField id="blPrint" value="{!newAppointment.Braille__c}"/>
+                
+                <apex:inputField id="call2" value="{!newAppointment.Call_2_Days_before_appointment_Required__c}"/>
+                
+                <apex:inputField id="Large_Print" value="{!newAppointment.Large_Print__c}"/>
+                
+                <apex:outputField id="eMeter1" value="{!newAppointment.Planned_Meter_Mode__c}" />
+           
+           </apex:pageBlockSection>
+           <apex:actionRegion >
+                <apex:pageBlockSection columns="2" id="pbs2" title="Key Collection" >
+                    <apex:inputField id="Key_Coll" value="{!newAppointment.Key_Collection_Required__c}">
+                        <apex:actionSupport event="onclick" action="{!isKeycollection}" reRender="pbs2,mymsg"/>
+                    </apex:inputField> 
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel id="lab" value="Key Person Name" for="Key_Pers" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                            <apex:inputField id="Key_Pers" value="{!newAppointment.Key_Person_Name__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem > 
+                        <apex:outputLabel id="lab1" value="Key Contact Number" for="Key_Cont" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                            <apex:inputField id="Key_Cont" value="{!newAppointment.Key_Contact_Number__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:inputField id="Key_Buil_num" value="{!newAppointment.Key_Building_Number__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Buil_name" value="{!newAppointment.Key_Building_Name__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Sub" value="{!newAppointment.Key_Sub_Building_Name__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Thor" value="{!newAppointment.Key_Thorofare__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Depd_Thor" value="{!newAppointment.Key_Dependant_Thorofare__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Depd_Local" value="{!newAppointment.Key_Dependant_Locality__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Doub" value="{!newAppointment.Key_Double_Dependant_Locality__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Town" value="{!newAppointment.Key_Town__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                    
+                    <apex:inputField id="Key_County" value="{!newAppointment.Key_County__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Post" value="{!newAppointment.Key_Post_Code__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                    <apex:inputField id="Key_Country" value="{!newAppointment.Key_Country__c}" rendered="{!newAppointment.Key_Collection_Required__c}"/>
+                    
+                </apex:pageBlockSection>
+            </apex:actionRegion>                
+            
+            <apex:pageBlockSection columns="2" id="pbs4" title="Meter Locations">
+                <apex:pageBlockSectionItem rendered="{!AND((newappointment.MPAN__c!=null) , (newappointment.MPAN__c!=''))}"> 
+                    <apex:outputLabel id="E_MeterO" value="E Meter Location" />
+                    <apex:selectList size="1" value="{!newappointment.E_Meter_Location__c}">
+                        <apex:selectOptions value="{!EMetLocLst}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!AND((newappointment.MPRN__c!=null) , (newappointment.MPRN__c!=''))}">
+                    <apex:outputLabel id="G_MeterO" value="G Meter Location" />
+                    <apex:selectList size="1" value="{!newappointment.G_Meter_Location__c}">
+                        <apex:selectOptions value="{!GMetLocLst}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>  
+            
+            <apex:pageBlockSection columns="1" id="pbs5" title="Communication details">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel id="Delivery_MethC" value="Comm Type Code - C" />
+                    <apex:selectList size="1" value="{!selectedDeliveryMethod_c}">
+                        <apex:selectOptions value="{!DeliveryMethodLstC}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel id="Delivery_MethI" value="Comm Type Code - I" />
+                    <apex:selectList size="1" value="{!selectedDeliveryMethod_I}">
+                        <apex:selectOptions value="{!DeliveryMethodLstI}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel id="Delivery_MethR" value="Comm Type Code - R" />
+                    <apex:selectList size="1" value="{!selectedDeliveryMethod_R}">
+                        <apex:selectOptions value="{!DeliveryMethodLstR}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>                    
+            
+            <apex:pageBlockSection columns="2" id="pbs6" title="Parking details">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel id="Parlab1" value="Parking Type" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                        <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                        <apex:selectList label="Parking Type" size="1" value="{!newappointment.Parking_Type__c}" required="true">
+                            <apex:selectOptions value="{!parkingLst}"/>
+                        </apex:selectList>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection> 
+            
+            <apex:pageBlockSection columns="1" id="addApptVul" title="Add Appointment Vulnerability" >
+                <!--CH01 Changed to Eon AppointmentVulnerability-->
+                <apex:variable var="rowCounter" value="{!0}"/>
+                <apex:actionRegion >
+                    <apex:pageMessage summary="{!addErrorMsg}." severity="Error" strength="2"
+                             rendered="{!AND(NOT(ISBLANK(addErrorMsg)),NOT(CONTAINS(addErrorMsg, 'Contact')))}" />
+                    <apex:panelGrid width="100%" columns="3" id="PG">
+                        <apex:actionStatus id="addingRowStatus">
+                            <apex:facet name="start">
+                                <apex:commandButton id="addingRow" disabled="true" value="Adding..." />
+                            </apex:facet>
+                            <apex:facet name="stop">
+                                <apex:commandButton status="addingRowStatus" id="addRow" value="Add Row" action="{!addRow}" 
+                                        reRender="addApptVul,mymsg"/>
+                            </apex:facet>
+                        </apex:actionStatus>
+                        <apex:pageBlockSectionItem >
+                            <!--CH12.Start-->
+                            <apex:outputLabel styleClass="SalesforceDetailFont" Value="Description"/>
+                            <apex:selectList label="Vulnerability Description" size="1" value="{!selectedVulnerability}" >
+                                <apex:selectOptions value="{!VulnerabilityLst}"/>
+                            </apex:selectList>
+                            <!--CH12.End-->
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel styleClass="SalesforceDetailFont">VulnerabilityTypeID</apex:outputLabel>
+                            <apex:inputField id="Vuln_code" styleClass="RemoveNone" value="{!EON_Appt_Vuln.VulnerabilityTypeID__c}"/>
+                        </apex:pageBlockSectionItem>
+                    </apex:panelGrid>
+                    <!--CH01 Changed to Eon AppointmentVulnerability-->
+                    <!-- CH01.Start Adding Eon Appointment Vulnerabilities section -->
+                    <apex:pageMessage summary="There are no Eon Appointment Vulnerabilities." severity="Info" strength="2" rendered="{!IF(lstApptVulnerability.size > 0,false,true)}" />
+                    <apex:pageBlockTable id="eonAppVulTable" value="{!lstApptVulnerability}" var="eonVulnerability" rendered="{!IF(lstApptVulnerability.size > 0,true,false)}">
+                        <apex:column headerValue="Action" id="act">
+                            <apex:commandLink id="remove" action="{!removeRow}" reRender="addApptVul,mymsg">
+                                <apex:image value="/img/func_icons/remove12_on.gif"/>
+                                <apex:param name="selEonAppVul" value="{!rowCounter}" assignTo="{!removeIndex}"/>
+                                <apex:variable var="rowCounter" value="{!rowCounter+1}"/>
+                            </apex:commandLink>
+                        </apex:column>
+                        <apex:column id="des" value="{!eonVulnerability.Description__c}"/>
+                        <apex:column id="type" value="{!eonVulnerability.VulnerabilityTypeID__c}"/>
+                    </apex:pageBlockTable>
+                </apex:actionRegion>
+            </apex:pageBlockSection>     
+                   
+            
+            <apex:pageBlockSection columns="1" id="addApptCont" title="Add Appointment Contacts">
+                <apex:variable var="rowCounter" value="{!0}"/>
+                <apex:actionRegion >
+                <!-- CH31  Adding Eon Appointment contact warning if only one appointment -->
+                  <apex:pageMessage summary="Atleast one appointment contact record is mandatory" severity="Info" strength="2" rendered="{!IF(lstApptContact.size ==1,true,false)}" />
+
+                    <apex:pageMessage summary="{!addErrorMsg}." severity="Error" strength="2" rendered="{!NOT(ISBLANK(addErrorMsg))}" />
+                    <apex:panelGrid width="100%" columns="3" id="PG1">
+                        <apex:pageBlockSectionItem HelpText="{$ObjectType.EON_Appointment_Contact__c.fields.Contact_Type__c.inlineHelpText}">
+                            <apex:outputPanel >
+                                <apex:outputLabel id="Cont" styleClass="SalesforceDetailFont" value="Contact Type"/> 
+                            </apex:outputPanel>
+                            <!--CH12.Start-->
+                            <apex:selectList label="Contact Type" size="1" value="{!selectedContact}" >
+                                <apex:selectOptions value="{!ContactLst}"/>
+                            </apex:selectList>
+                            <!--CH12.End-->
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel styleClass="SalesforceDetailFont">Contact Full Name</apex:outputLabel>
+                            <apex:inputField id="Contact_Full" value="{!ApptCont.Contact_Full_Name__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel id="Mediatypelab" styleClass="SalesforceDetailFont" value="Media Type" />
+                            <apex:selectList label="Parking Type" size="1" value="{!selectedMediaType}">
+                                <apex:selectOptions value="{!MediaTypeLst}"/>
+                            </apex:selectList>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel styleClass="SalesforceDetailFont">Media Detail  </apex:outputLabel>
+                            <apex:inputField id="Media_Detail" value="{!ApptCont.Media_Detail__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel styleClass="SalesforceDetailFont">Customer Assistant</apex:outputLabel>
+                            <apex:inputField id="Customer_Assist" value="{!ApptCont.Customer_Assistant__c}"/>
+                        </apex:pageBlockSectionItem>
+                    </apex:panelGrid>
+                    <apex:actionStatus id="addingRowStatus">
+                        <apex:facet name="start">
+                            <apex:commandButton id="addingRow" disabled="true" value="Adding..." />
+                        </apex:facet>
+                        <apex:facet name="stop">
+                            <apex:commandButton status="addingRowStatus" id="addRow" value="Add Row" action="{!addRowCon}" reRender="addApptCont,mymsg"/>
+                        </apex:facet>
+                    </apex:actionStatus>
+                    <br/><br/>
+                    <apex:pageMessage summary="There are no Eon Appointment Contacts." severity="Info" strength="2" rendered="{!IF(lstApptContact.size > 0,false,true)}" />
+                    <apex:pageBlockTable id="eonAppConTable" value="{!lstApptContact}" var="eonCon" rendered="{!IF(lstApptContact.size > 0,true,false)}">
+                        <apex:column headerValue="Action" id="act">
+                            <apex:commandLink id="remove" immediate="true" action="{!removeRowCon}" reRender="addApptCont,mymsg">
+                                <apex:image value="/img/func_icons/remove12_on.gif"/>
+                                <apex:param name="selEonAppVul" value="{!rowCounter}" assignTo="{!removeIndex}"/>
+                                <apex:variable var="rowCounter" value="{!rowCounter+1}"/>
+                            </apex:commandLink>
+                        </apex:column>
+                        <apex:column id="Ctyp" value="{!eonCon.Contact_Type__c}"/>
+                        <apex:column id="CFN" value="{!eonCon.Contact_Full_Name__c}"/>
+                        <apex:column id="CMT" value="{!eonCon.Media_Type__c}"/>
+                        <apex:column id="CMD" value="{!eonCon.Media_Detail__c}"/>
+                        <apex:column id="CCA" value="{!eonCon.Customer_Assistant__c}"/>
+                    </apex:pageBlockTable>
+                </apex:actionRegion>
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockButtons id="PBB" >
+                <apex:commandButton disabled="{!canProceed}" value="Save" action="{!Save}"  reRender="mymsg,pb1" />
+                <apex:commandButton value="Cancel" action="/apex/EON_Appointment_Booking" immediate="true" />
+             <apex:commandButton id="proceedBtn" rendered="{!canProceed}" value="Proceed to Book" action="{!createApptInOFSC}" />
+            </apex:pageBlockButtons>                                          
+        
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>
