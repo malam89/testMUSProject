@@ -1,0 +1,252 @@
+<!---
+    DESCRIPTION: This page is accessed from Tab name as EON Monitoring. This Page show below status for EON 
+                 1. Interface Status
+                 2. Recent file transfer result
+                 3. Errors/Failures for most recent web service call
+                 4. Response time of most recent web service call
+--->
+<!--
+    CREATED BY    : Mehboob Alam
+    CREATED DATE  : 09/10/2017
+    Service Req   : SR_OptiMUS_EON_149
+    Change History
+-->
+<apex:page id="nPage" controller="EON_Monitoring_Controller">
+<script src="/soap/ajax/30.0/connection.js" type="text/javascript"></script>
+<script src="/soap/ajax/30.0/apex.js" type="text/javascript"></script>
+<apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-1.7.2.min.js')}" />
+<apex:includeScript value="{!URLFOR($Resource.EON_JQuery_Lib, 'js/jquery-ui-1.8.21.custom.min.js')}" />
+  <script type="text/javascript">
+     sforce.connection.sessionId = '{!$Api.Session_ID}';
+      var jobCodeMap = {};
+      //Running jQuery on Page Load
+      j$ = jQuery.noConflict();
+      j$(document).ready(function(){
+        document.getElementById("jFail").style.display = "none";
+        document.getElementById("jSuccess").style.display = "none";
+        document.getElementById("oFail").style.display = "none";
+        document.getElementById("oSuccess").style.display = "none";
+        document.getElementById("eFail").style.display = "none";
+        document.getElementById("eSuccess").style.display = "none";
+        document.getElementById("mFail").style.display = "none";
+        document.getElementById("mSuccess").style.display = "none";
+        document.getElementById("vFail").style.display = "none";
+        document.getElementById("vSuccess").style.display = "none";
+        WebServicCall();
+        ResponseTime();
+        callJUMBOStatus();
+        callOFSCStatus();
+        callMIDOSStatus();
+        callEONStatus();
+        callVOICEStatus();
+      });
+      
+      //Getting JUMBO Interface Status
+      function callJUMBOStatus(){
+       Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.EON_Monitoring_Controller.JUMBOInterfaceStatus}',function(result, event){
+         if(event.status) {
+           document.getElementById("jLoading").style.display = "none";
+           document.getElementById("jlink").href  = '{!baseURL}'+result.link;
+             if(result.status == false)
+                document.getElementById("jFail").style.display = "block";
+                 else
+                  document.getElementById("jSuccess").style.display = "block";
+            } 
+        }, 
+        {escape: true}
+       );
+    }
+    
+    //Getting OFSC Interface Status
+    function callOFSCStatus(){
+       Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.EON_Monitoring_Controller.OFSCInterfaceStatus}',function(result, event){
+         if(event.status){
+           document.getElementById("oLoading").style.display = "none";
+           document.getElementById("olink").href  = '{!baseURL}'+result.link;
+             if(result.status == false)
+                document.getElementById("oFail").style.display = "block";
+                 else
+                  document.getElementById("oSuccess").style.display = "block";
+            } 
+        }, 
+        {escape: true}
+       );
+    }
+    
+    //Getting MIDOS Interface Status
+    function callMIDOSStatus(){
+       Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.EON_Monitoring_Controller.MIDOSInterfaceStatus}',function(result, event){
+         if(event.status) {
+           document.getElementById("mLoading").style.display = "none";
+           document.getElementById("mlink").href  = '{!baseURL}'+result.link;
+             if(result.status == false)
+                document.getElementById("mFail").style.display = "block";
+                 else
+                  document.getElementById("mSuccess").style.display = "block";
+            } 
+        }, 
+        {escape: true}
+       );
+    }
+    
+    //Getting EON Interface Status
+    function callEONStatus(){
+       Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.EON_Monitoring_Controller.EONInterfaceStatus}',function(result, event){
+         if(event.status) {
+           document.getElementById("eLoading").style.display = "none";
+           document.getElementById("elink").href  = '{!baseURL}'+result.link;
+             if(result.status == false)
+                document.getElementById("eFail").style.display = "block";
+                 else
+                  document.getElementById("eSuccess").style.display = "block";
+            } 
+        }, 
+        {escape: true}
+       );
+    }
+    
+     //Getting VOICE Interface Status
+     function callVOICEStatus(){
+       Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.EON_Monitoring_Controller.VOICEInterfaceStatus}',function(result, event){
+         if(event.status) {
+           document.getElementById("vLoading").style.display = "none";
+           document.getElementById("vlink").href  = '{!baseURL}'+result.link;
+             if(result.status == false)
+                document.getElementById("vFail").style.display = "block";
+                 else
+                  document.getElementById("vSuccess").style.display = "block";
+            } 
+        }, 
+        {escape: true}
+       );
+    }
+  </script>
+  
+  <apex:form id="nForm">
+    <apex:actionFunction name="WebServicCall" action="{!lstWebServicCall}" reRender="pBlockEF"/>
+    <apex:actionFunction name="ResponseTime" action="{!reqResponseTime}" reRender="pBlock2"/>
+    <apex:pageBlock id="pBlocS">
+    <apex:pageBlockButtons >
+        <apex:commandButton value="Refresh" action="{!refreshPage}" style="position:relative;left:16%"/>
+    </apex:pageBlockButtons>
+    <apex:panelGrid id="nPanel1" columns="2" width="100%">
+       <apex:pageBlock id="pBlocI">
+        <apex:pageBlockSection id="pBlkSecF" title="Interface Status" columns="1" collapsible="false"> 
+           <table class="list">  
+              <thead>
+                <tr class="headerRow">
+                    <th class="headerRow" scope="col">Interface</th>
+                    <th class="headerRow" scope="col">Record Link</th>
+                    <th class="headerRow" scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="dataRow">
+                    <td>JUMBO</td>
+                    <td><a id="jlink" target="_blank">Rec Link</a></td>
+                    <td><img id="jFail" src="{!$Resource.EON_Monitoring_Failure}" alt="Smiley face" height="23" /> 
+                    <img id="jLoading" src="{!$Resource.EON_Loading_Status}" alt="Smiley face" height="23" />
+                    <img id="jSuccess" src="{!$Resource.EON_Monitoring_Sucess}" alt="Smiley face" height="23" /></td>
+                </tr>
+                <tr class="dataRow">
+                    <td>OFSC</td>
+                    <td><a id="olink" target="_blank">Rec Link</a></td>
+                    <td><img id="oFail" src="{!$Resource.EON_Monitoring_Failure}" alt="Smiley face" height="23" /> 
+                    <img id="oLoading" src="{!$Resource.EON_Loading_Status}" alt="Smiley face" height="23" />
+                    <img id="oSuccess" src="{!$Resource.EON_Monitoring_Sucess}" alt="Smiley face" height="23" /></td>
+                </tr>
+                <tr class="dataRow">
+                    <td>MIDOS</td>
+                    <td><a id="mlink" target="_blank">Rec Link</a></td>
+                    <td><img id="mFail" src="{!$Resource.EON_Monitoring_Failure}" alt="Smiley face" height="23" />
+                    <img id="mLoading" src="{!$Resource.EON_Loading_Status}" alt="Smiley face" height="23" />                       
+                    <img id="mSuccess" src="{!$Resource.EON_Monitoring_Sucess}" alt="Smiley face" height="23" /></td>
+                </tr>
+                <tr class="dataRow">
+                    <td>EON</td>
+                    <td><a id="elink" target="_blank">Rec Link</a></td>
+                    <td><img id="eFail" src="{!$Resource.EON_Monitoring_Failure}" alt="Smiley face" height="23" />
+                    <img id="eLoading" src="{!$Resource.EON_Loading_Status}" alt="Smiley face" height="23" />                       
+                    <img id="eSuccess" src="{!$Resource.EON_Monitoring_Sucess}" alt="Smiley face" height="23" /></td>
+                </tr>
+                <tr class="dataRow">
+                    <td>VOICE</td>
+                    <td><a id="vlink" target="_blank">Rec Link</a></td>
+                    <td><img id="vFail" src="{!$Resource.EON_Monitoring_Failure}" alt="Smiley face" height="23" />
+                    <img id="vLoading" src="{!$Resource.EON_Loading_Status}" alt="Smiley face" height="23" />                       
+                    <img id="vSuccess" src="{!$Resource.EON_Monitoring_Sucess}" alt="Smiley face" height="23" /></td>
+                </tr>
+               </tbody>
+             </table>
+        </apex:pageBlockSection>
+      </apex:pageBlock>
+         
+         <!--Page Block to show last file transfer result-->
+         <apex:pageBlock id="pBlockF">
+             <apex:pageBlockSection id="pBlkSecF" title="Recent file transfer result" columns="1" collapsible="false">
+                 <apex:pageBlockTable id="pTableF" value="{!jList}" var="jL" cellspacing="2" >
+                    <apex:column id="jobName" headerValue="Job Name" value="{!jL.Name}"></apex:column>
+                    <apex:column id="lastRunTime" headerValue="Last RunTime" value="{!jL.Last_Run_Time__c}"></apex:column>
+                    <apex:column id="jobResult" headerValue="Job Result">
+                        <apex:image id="jSuccess" value="{!$Resource.EON_Monitoring_Sucess}" height="23" rendered="{!IF(jL.Result__c=='Success',true,false)}"/>
+                        <apex:image id="jFailure" value="{!$Resource.EON_Monitoring_Failure}" height="23" rendered="{!IF(jL.Result__c=='Failure',true,false)}"/>
+                    </apex:column>
+                 </apex:pageBlockTable>          
+           </apex:pageBlockSection>
+         </apex:pageBlock>
+     </apex:panelGrid>                
+     
+        <!--Page Block to show Errors/Failures for most recent web service call-->
+        <apex:pageBlock id="pBlockEF">
+            <apex:pageBlockSection id="pBlkSecEF" title="Errors/Failures for most recent Web Service call" columns="1" collapsible="false">
+                <apex:pageBlockTable id="pTableEF" value="{!lList}" var="l1" cellspacing="2">
+                    <apex:column id="sPDate" headerValue="Interface Name" value="{!l1.Name}"></apex:column>
+                    <apex:column id="sContract" headerValue="Current Status">
+                        <apex:image value="{!$Resource.EON_Monitoring_Sucess}" height="23" rendered="{!l1.Status}"/>
+                        <apex:image value="{!$Resource.EON_Monitoring_Failure}" height="23" rendered="{!(!l1.Status)}"/>
+                    </apex:column>
+                    <apex:column id="sCDate" headerValue="Created Date" value="{!l1.cTime}"></apex:column>
+                    <apex:column id="sSR" headerValue="Record Refrence">
+                        <apex:outputLink id="pName" value="/{!l1.RecId}" target="_blank">{!l1.RecName}</apex:outputLink>
+                    </apex:column>  
+                </apex:pageBlockTable> 
+                <apex:outputPanel id="lLoad" rendered="{!lLoading}" style="position:relative;left:43%">
+                   <img src="{!$Resource.EON_Loading_Status}" />
+                </apex:outputPanel>
+             </apex:pageBlockSection>
+         </apex:pageBlock>
+  
+    
+    <apex:panelGrid columns="2" width="100%">
+        <!--Page Block to show Response Time of most recent Web Service Call-->
+        <apex:pageBlock id="pBlock2">
+            <apex:pageBlockSection title="Response Time of most recent Web Service call" columns="1" collapsible="false">
+                <apex:pageBlockTable id="sTable" value="{!tList}" var="t1" cellspacing="2">
+                    <apex:column id="sPDate" headerValue="Interface Name" value="{!t1.Name}"></apex:column>
+                    <apex:column id="sContract" headerValue="Response Time" value="{!t1.LifeTime}"></apex:column>
+                    <apex:column id="sDate" headerValue="Created Date" value="{!t1.cTime}"></apex:column>
+                    <apex:column id="sSR" headerValue="Record Refrence">
+                        <apex:outputLink id="pName" value="/{!t1.RecId}" target="_blank">{!t1.RecName}</apex:outputLink>
+                    </apex:column>  
+                </apex:pageBlockTable> 
+                <apex:outputPanel id="tLoad" rendered="{!tLoading}" style="position:relative;left:43%">
+                   <img src="{!$Resource.EON_Loading_Status}" />
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+       </apex:pageBlock>
+
+       <!--Page Block to show Future Call Queue-->
+       <apex:pageBlock id="pBlock3">
+           <apex:pageBlockSection title="Future Call Queue" columns="1" collapsible="false">
+               <apex:outputLabel >{!futureQueue} - Jobs Pending in Queue</apex:outputLabel>
+           </apex:pageBlockSection>
+        </apex:pageBlock>
+      </apex:panelGrid>
+    </apex:pageBlock>
+  </apex:form>
+  <style>
+   .hidden {
+     display: none;
+     }
+  </style>
+</apex:page>
