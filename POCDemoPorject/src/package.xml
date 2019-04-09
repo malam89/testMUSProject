@@ -4,5 +4,13 @@
         <members>demoClass</members>
         <name>ApexClass</name>
     </types>
+    <types>
+        <members>SMS_Tracker__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>EON_Monitoring</members>
+        <name>ApexPage</name>
+    </types>
     <version>38.0</version>
 </Package>
