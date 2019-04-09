@@ -75,7 +75,7 @@
         <fullName>Date_Time_of_Dispatch__c</fullName>
         <externalId>false</externalId>
         <label>Date / Time of Dispatch</label>
-        <required>false</required>
+        <required>true</required>
         <trackTrending>false</trackTrending>
         <type>DateTime</type>
     </fields>
